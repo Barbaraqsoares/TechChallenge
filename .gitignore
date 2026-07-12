@@ -1,0 +1,19 @@
+# Pastas de build
+bin/
+obj/
+
+# Arquivos do Visual Studio
+.vs/
+
+# Logs
+*.log
+
+# Configurações locais
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Cache do NuGet
+*.nupkg
+packages/
