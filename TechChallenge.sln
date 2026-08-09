@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechChallenge.Domain", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechChallenge.Infrastructure", "src\TechChallenge.Infrastructure\TechChallenge.Infrastructure.csproj", "{608AFF51-0937-6EB5-AD70-E6E61A878BA3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TechChallengeUnitTests", "teste\TechChallengeUnitTests\TechChallengeUnitTests.csproj", "{16E5E4DF-4AC7-4D54-8EEE-F4AA211E72F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{608AFF51-0937-6EB5-AD70-E6E61A878BA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{608AFF51-0937-6EB5-AD70-E6E61A878BA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{608AFF51-0937-6EB5-AD70-E6E61A878BA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16E5E4DF-4AC7-4D54-8EEE-F4AA211E72F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16E5E4DF-4AC7-4D54-8EEE-F4AA211E72F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16E5E4DF-4AC7-4D54-8EEE-F4AA211E72F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16E5E4DF-4AC7-4D54-8EEE-F4AA211E72F2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
