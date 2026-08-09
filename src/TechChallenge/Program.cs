@@ -37,9 +37,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Desafio API",
+        Title = "Tech Challenge",
         Version = "v1",
-        Description = "API de exemplo para o projeto Desafio",
+        Description = "Tech Challenge",
         Contact = new OpenApiContact
         {
             Name = "Equipe Desafio",
