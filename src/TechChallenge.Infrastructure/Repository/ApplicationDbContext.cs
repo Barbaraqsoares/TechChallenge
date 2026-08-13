@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository;
 
@@ -16,6 +17,8 @@ public class ApplicationDbContext : DbContext
      * Example:
      * public DbSet<YourEntity> YourEntities { get; set; }
      */
+
+    public DbSet<Game> Games { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
