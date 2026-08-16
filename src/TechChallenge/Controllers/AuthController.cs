@@ -3,6 +3,9 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Services;
 
 namespace TechChallenge.Controllers;
 
@@ -11,28 +14,51 @@ namespace TechChallenge.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IConfiguration _configuration;
+    private readonly IUserService _userService;
 
-    public AuthController(IConfiguration configuration)
+    public AuthController(IConfiguration configuration, IUserService userService)
     {
         _configuration = configuration;
+        _userService = userService;
     }
 
     [HttpPost("login")]
-    public IActionResult Login([FromBody] UsuarioLogin login)
+    public async Task<IActionResult> Login(
+    [FromBody] UsuarioLogin login
+)
     {
-        // Exemplo simples: valida usuários fixos
-        if (login.Username == "joao" && login.Password == "1234")
+        var user = await _userService.AuthenticateAsync(
+            login.Username,
+            login.Password
+        );
+
+        if (user == null)
         {
-            var token = GerarToken(login.Username, "User");
-            return Ok(new { token });
-        }
-        else if (login.Username == "maria" && login.Password == "abcd")
-        {
-            var token = GerarToken(login.Username, "Admin");
-            return Ok(new { token });
+            return Unauthorized(
+                "Usuário ou senha inválidos"
+            );
         }
 
-        return Unauthorized("Usuário ou senha inválidos");
+        var token = GerarToken(
+            user.Login,
+            user.Perfil.ToString()
+        );
+
+        return Ok(new { token });
+    }
+
+    [HttpPost("register")]
+    public async Task<IActionResult> Register(
+    [FromBody] User user
+)
+    {
+        var createdUser =
+            await _userService.CreateAsync(user);
+
+        return Created(
+            $"/api/users/{createdUser.Id}",
+            createdUser
+        );
     }
 
     private string GerarToken(string username, string role)
