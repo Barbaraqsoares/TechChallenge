@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace Desafio.Middleware;
+namespace TechChallenge.Middleware;
 
 public class JwtMiddleware
 {
@@ -18,14 +18,14 @@ public class JwtMiddleware
     {
         var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
 
-        if (token != null)
+        if (!string.IsNullOrEmpty(token))
         {
             try
             {
                 var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
                 var key = Encoding.UTF8.GetBytes(_secret);
 
-                tokenHandler.ValidateToken(token, new TokenValidationParameters
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
                 {
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(key),
@@ -35,11 +35,12 @@ public class JwtMiddleware
                 }, out var validatedToken);
 
                 // Se quiser, pode adicionar claims ao contexto
-                context.Items["User"] = ((System.IdentityModel.Tokens.Jwt.JwtSecurityToken)validatedToken).Claims;
+                context.User = principal;
             }
             catch
             {
                 // Token inválido → não autentica
+                throw new Exception(string.Format("Token inválido"));
             }
         }
 

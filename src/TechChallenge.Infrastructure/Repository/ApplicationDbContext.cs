@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository;
 
@@ -10,6 +11,9 @@ public class ApplicationDbContext : DbContext
     {
         _connectionString = connectionString;
     }
+
+    public DbSet<User> Users { get; set; }
+    public DbSet<Game> Games { get; set; }
 
     /* TO DOs
      * 1. Add DbSet properties for your entities here
@@ -27,6 +31,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         /* TO DOs
          * 1. Configure your entity mappings here
          * Criar classes de configuração, pasta configuration, para cada entidade e aplicar aqui
