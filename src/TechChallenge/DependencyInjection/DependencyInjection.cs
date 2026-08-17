@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Services;
 using TechChallenge.Infrastructure.Repository;
 
 namespace TechChallenge.DependencyInjection;
@@ -19,6 +19,12 @@ public static class DependencyInjection
 
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserService, UserService>();
+
+        services.AddScoped<IGameRepository, GameRepository>();
+        services.AddScoped<IGameService, GameService>();
 
         // Registrar outros serviços de infra aqui, se necessário.
         // ex: services.AddScoped<IProductRepository, ProductRepository>();

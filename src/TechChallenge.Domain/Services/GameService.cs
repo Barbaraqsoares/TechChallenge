@@ -47,7 +47,7 @@ public class GameService : IGameService
         existingGame.Price = game.Price;
         existingGame.IsMultiplayer = game.IsMultiplayer;
         existingGame.IsActive = game.IsActive;
-        existingGame.UpdateAt = DateTime.UtcNow;
+        existingGame.UpdateAt = DateTime.Now;
 
         await _gameRepository.UpdateAsync(existingGame);
 

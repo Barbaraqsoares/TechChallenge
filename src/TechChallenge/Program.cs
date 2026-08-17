@@ -88,6 +88,7 @@ builder.Services.AddSwaggerGen(c =>
     }
 });
 
+
 // Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
 

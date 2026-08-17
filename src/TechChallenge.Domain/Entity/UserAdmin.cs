@@ -2,16 +2,18 @@
 
 public class UserAdmin : UserBase
 {
-    public required string Name { get; set; }
-    public required string Email { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
 
     public UserAdmin(string name, PerfilEnum perfil, string email, string password, string login)
         : base(login, password)
     {
         Name = name.Trim();
         Perfil = perfil;
-        Email = email;
-        Password = password;
+        ValidateEmail(email);
+        Email = email.Trim();
+
+        
         Login = login;
     }
 
@@ -19,7 +21,8 @@ public class UserAdmin : UserBase
     {
         Name = name.Trim();
         Perfil = perfil;
-        Email = email;
-        Password = password;
+        ValidateEmail(email);
+        Email = email.Trim();
+        SetPassword(password);
     }
 }

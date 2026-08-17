@@ -5,11 +5,9 @@ namespace TechChallenge.Infrastructure.Repository;
 
 public class ApplicationDbContext : DbContext
 {
-    private readonly string _connectionString;
-
-    public ApplicationDbContext(string connectionString)
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options ) : base(options)
     {
-        _connectionString = connectionString;
     }
 
     public DbSet<User> Users { get; set; }
@@ -21,13 +19,6 @@ public class ApplicationDbContext : DbContext
      * public DbSet<YourEntity> YourEntities { get; set; }
      */
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-            optionsBuilder.UseSqlServer(_connectionString);
-        }
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

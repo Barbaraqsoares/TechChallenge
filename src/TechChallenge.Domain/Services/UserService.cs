@@ -1,5 +1,6 @@
 ﻿using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.User;
 
 namespace TechChallenge.Domain.Services;
 
@@ -12,10 +13,12 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<User> CreateAsync(User user)
+    public async Task<UserResponse> CreateAsync(
+        RegisterUserRequest request
+    )
     {
         var existingLogin =
-            await _userRepository.GetByLoginAsync(user.Login);
+            await _userRepository.GetByLoginAsync(request.Login);
 
         if (existingLogin != null)
         {
@@ -25,7 +28,7 @@ public class UserService : IUserService
         }
 
         var existingEmail =
-            await _userRepository.GetByEmailAsync(user.Email);
+            await _userRepository.GetByEmailAsync(request.Email);
 
         if (existingEmail != null)
         {
@@ -34,7 +37,26 @@ public class UserService : IUserService
             );
         }
 
-        return await _userRepository.AddAsync(user);
+        var user = new User(
+            request.Name,
+            PerfilEnum.Client,
+            request.Email,
+            request.Password,
+            request.Login
+        );
+
+        var createdUser =
+            await _userRepository.AddAsync(user);
+
+        return new UserResponse
+        {
+            Id = createdUser.Id,
+            Name = createdUser.Name,
+            Email = createdUser.Email,
+            Login = createdUser.Login,
+            Perfil = createdUser.Perfil,
+            CreatedAt = createdUser.CreatedAt
+        };
     }
 
     public async Task<User?> AuthenticateAsync(

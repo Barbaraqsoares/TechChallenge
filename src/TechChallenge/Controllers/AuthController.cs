@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.User;
 using TechChallenge.Domain.Services;
 
 namespace TechChallenge.Controllers;
@@ -49,11 +50,11 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(
-    [FromBody] User user
+    [FromBody] RegisterUserRequest request
 )
     {
         var createdUser =
-            await _userService.CreateAsync(user);
+            await _userService.CreateAsync(request);
 
         return Created(
             $"/api/users/{createdUser.Id}",
