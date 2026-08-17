@@ -11,6 +11,9 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    public DbSet<User> Users { get; set; }
+    public DbSet<Game> Games { get; set; }
+
     /* TO DOs
      * 1. Add DbSet properties for your entities here
      * Example:
