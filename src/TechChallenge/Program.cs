@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 using TechChallenge.DependencyInjection;
+using TechChallenge.Infrastructure.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var configuration = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
 
 // JWT settings via configuration (appsettings.json / environment)
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -90,6 +96,10 @@ builder.Services.AddSwaggerGen(c =>
 
 // Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection"));
+}, ServiceLifetime.Scoped);
 
 
 var app = builder.Build();

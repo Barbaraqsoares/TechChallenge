@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository;
 
@@ -6,9 +7,8 @@ public class ApplicationDbContext : DbContext
 {
     private readonly string _connectionString;
 
-    public ApplicationDbContext(string connectionString)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
-        _connectionString = connectionString;
     }
 
     /* TO DOs
@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
      * Example:
      * public DbSet<YourEntity> YourEntities { get; set; }
      */
+    public DbSet<User> User { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
@@ -27,11 +28,6 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        /* TO DOs
-         * 1. Configure your entity mappings here
-         * Criar classes de configuração, pasta configuration, para cada entidade e aplicar aqui
-         * Example:
-         * modelBuilder.ApplyConfigurationFromAssembly(typeOf(ApplicationDbContext).Assembly);
-         */
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
