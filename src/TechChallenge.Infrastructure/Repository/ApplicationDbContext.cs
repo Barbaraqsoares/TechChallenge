@@ -3,13 +3,9 @@ using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     private readonly string _connectionString;
-
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
-    {
-    }
 
     public DbSet<User> Users { get; set; }
     public DbSet<Game> Games { get; set; }
