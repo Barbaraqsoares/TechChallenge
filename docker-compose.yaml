@@ -9,13 +9,26 @@ services:
       - "1433:1433"
     volumes:
       - sqlvolume:/var/opt/mssql
+    healthcheck:
+      # O SQL Server aceita conexões só depois de alguns segundos. Sem este teste,
+      # a API subiria antes do banco estar pronto.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   webapp:
     build: .
+    container_name: TechChallengeAPI
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
     ports:
-      - "8080:80"
+      # A imagem aspnet:8.0 escuta na porta 8080 por padrão.
+      - "8080:8080"
 
 volumes:
   sqlvolume:

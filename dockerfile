@@ -16,8 +16,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
-# Expõe a porta padrão do ASP.NET
-EXPOSE 80
+# Porta padrão do ASP.NET Core no .NET 8 (definida por ASPNETCORE_HTTP_PORTS)
+EXPOSE 8080
 
 # Comando de inicialização
 ENTRYPOINT ["dotnet", "TechChallenge.dll"]

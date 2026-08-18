@@ -1,105 +1,92 @@
-using Desafio.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Reflection;
-using System.Text;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Serilog;
+using TechChallenge.Configuration;
+using TechChallenge.HealthChecks;
+using TechChallenge.Infrastructure;
+using TechChallenge.Infrastructure.Database;
+using TechChallenge.Middleware;
 
-var builder = WebApplication.CreateBuilder(args);
+// Logger provisório, ativo apenas até o host subir com a configuração definitiva.
+// Sem ele, uma falha antes do builder.Build() não seria registrada em lugar nenhum.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-// Configuração da autenticação JWT
-builder.Services.AddAuthentication(options =>
+try
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
+    var builder = WebApplication.CreateBuilder(args);
+
+    // ---------------------------------------------------------------------
+    // Serviços da aplicação
+    // ---------------------------------------------------------------------
+    builder.Host.UseSerilogLogging();
+
+    builder.Services.AddControllers();
+    builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddSwaggerDocumentation();
+
+    // Banco de dados e repositórios (camada de infraestrutura).
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    var app = builder.Build();
+
+    // Deixa o banco atualizado e com o administrador inicial antes de a aplicação
+    // começar a atender requisições.
+    await app.Services.MigrateDatabaseAsync();
+    await app.Services.SeedAsync();
+
+    // ---------------------------------------------------------------------
+    // Pipeline de requisições
+    // ---------------------------------------------------------------------
+    // A ordem importa: o log de requisições envolve tudo, e o tratamento de
+    // exceções vem logo em seguida para capturar o que os demais lançarem.
+    app.UseRequestLogging();
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+    app.UseSwagger();
+    app.UseSwaggerUI(swagger =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        ValidIssuer = "suaempresa.com",       // quem emite o token
-        ValidAudience = "suaempresa.com",     // quem consome o token
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("chave-secreta-super-segura"))
-    };
-});
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Tech Challenge",
-        Version = "v1",
-        Description = "Tech Challenge",
-        Contact = new OpenApiContact
-        {
-            Name = "Equipe Desafio",
-            Email = "contato@desafio.com"
-        }
+        swagger.SwaggerEndpoint("/swagger/v1/swagger.json", "Tech Challenge v1");
+        swagger.RoutePrefix = string.Empty; // abre direto na raiz
     });
 
-    // Configuração de segurança JWT
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    // No container a aplicação serve apenas HTTP (o TLS fica a cargo do proxy à
+    // frente dela). Manter o redirecionamento ali só geraria um aviso por requisição.
+    if (app.Environment.IsDevelopment())
     {
-        Description = "Insira o token JWT no campo abaixo usando o esquema: Bearer {seu token}",
-        Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-
-    // Comentários XML (se habilitado no .csproj)
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        c.IncludeXmlComments(xmlPath);
+        app.UseHttpsRedirection();
     }
-});
 
-var app = builder.Build();
+    app.UseAuthentication();
+    app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
+    app.MapControllers();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+    // Responde 200 quando a aplicação está saudável e 503 quando não está.
+    app.MapHealthChecks("/health", new HealthCheckOptions
+    {
+        ResponseWriter = HealthCheckResponseWriter.WriteAsync
+    });
+
+    app.Run();
+}
+// Erros de inicialização não passam pelo ExceptionHandlingMiddleware: ele só atua
+// dentro de requisições HTTP. Exemplos: connection string inválida, porta em uso,
+// migration que falha, serviço não registrado no DI.
+// A cláusula "when" ignora o HostAbortedException, lançado pelas ferramentas do
+// Entity Framework (dotnet ef migrations) ao encerrar o host propositalmente.
+catch (Exception exception) when (exception is not HostAbortedException)
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Desafio API v1");
-    c.RoutePrefix = string.Empty; // abre direto na raiz
-});
+    Log.Fatal(exception, "A aplicação não pôde ser iniciada");
 
-app.UseHttpsRedirection();
+    // Encerra o processo com código de erro. É assim que o Docker e ferramentas de
+    // orquestração percebem que o container falhou em vez de ter terminado normalmente.
+    return 1;
+}
+finally
+{
+    // Grava o que ainda estiver em buffer antes do processo terminar.
+    Log.CloseAndFlush();
+}
 
-// Ativar autenticação e autorização
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseMiddleware<JwtMiddleware>();
-
-app.MapControllers();
-
-app.Run();
+return 0;

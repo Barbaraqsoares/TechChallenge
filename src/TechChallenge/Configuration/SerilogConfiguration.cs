@@ -1,0 +1,65 @@
+using Serilog;
+using Serilog.Events;
+using Serilog.Formatting.Compact;
+
+namespace TechChallenge.Configuration;
+
+/// <summary>
+/// Configuração dos logs estruturados (Serilog).
+/// </summary>
+public static class SerilogConfiguration
+{
+    /// <summary>
+    /// Em Development a saída é legível, para acompanhar durante o desenvolvimento.
+    /// Em Production é JSON, onde cada propriedade do log vira um campo pesquisável.
+    /// </summary>
+    public static IHostBuilder UseSerilogLogging(this IHostBuilder host) =>
+        host.UseSerilog((context, loggerConfiguration) =>
+        {
+            loggerConfiguration
+                .MinimumLevel.Information()
+                // Silencia o ruído das bibliotecas da Microsoft — em especial o Entity
+                // Framework, que registra cada consulta SQL em nível Information.
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                // Exceto o ciclo de vida do host, que traz mensagens úteis como
+                // "Now listening on: http://localhost:5022".
+                .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Application", "TechChallenge")
+                .Enrich.WithProperty("Environment", context.HostingEnvironment.EnvironmentName);
+
+            if (context.HostingEnvironment.IsDevelopment())
+            {
+                loggerConfiguration.WriteTo.Console();
+            }
+            else
+            {
+                loggerConfiguration.WriteTo.Console(new CompactJsonFormatter());
+            }
+        });
+
+    /// <summary>
+    /// Grava uma linha por requisição HTTP com método, rota, status e duração.
+    /// </summary>
+    public static IApplicationBuilder UseRequestLogging(this IApplicationBuilder app) =>
+        app.UseSerilogRequestLogging(options =>
+        {
+            // O /health é consultado de forma repetida pelo monitoramento. Mantê-lo em
+            // Information encheria o log de ruído, então ele desce para Debug — abaixo
+            // do nível mínimo configurado — enquanto a resposta estiver saudável.
+            options.GetLevel = (httpContext, elapsed, exception) =>
+            {
+                if (exception is not null || httpContext.Response.StatusCode >= 500)
+                {
+                    return LogEventLevel.Error;
+                }
+
+                if (httpContext.Request.Path.StartsWithSegments("/health"))
+                {
+                    return LogEventLevel.Debug;
+                }
+
+                return LogEventLevel.Information;
+            };
+        });
+}
