@@ -17,3 +17,10 @@ obj/
 # Cache do NuGet
 *.nupkg
 packages/
+/Desenvolvimento de API com .NET
+/docs
+/Entity Framework
+/Mergulhando em DDD
+/Qualidade de Software
+/Qualidade de Software - Pirâmide de Testes
+/README.md
