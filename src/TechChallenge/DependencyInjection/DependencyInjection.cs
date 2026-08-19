@@ -34,8 +34,8 @@ public static class DependencyInjection
         services.AddScoped<IGameRepository, GameRepository>();
         services.AddScoped<IGameService, GameService>();
 
-        // Registrar outros serviços de infra aqui, se necessário.
-        // ex: services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IPromotionRepository, PromotionRepository>();
+        services.AddScoped<IPromotionService,PromotionService>();
 
         return services;
     }

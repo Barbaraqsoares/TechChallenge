@@ -1,6 +1,6 @@
-﻿namespace TechChallenge.Domain.Entity;
+﻿namespace TechChallenge.Domain.Models.Promotion;
 
-public class Promotion
+public class PromotionResponse
 {
     public int Id { get; set; }
     public required string Name { get; set; }
@@ -10,6 +10,5 @@ public class Promotion
     public bool IsActive { get; set; }
     public int CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public ICollection<Game> Games { get; set; } = new List<Game>();
+    public List<int> GameIds { get; set; } = new();
 }

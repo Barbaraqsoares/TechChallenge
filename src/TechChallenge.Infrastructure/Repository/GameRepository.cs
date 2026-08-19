@@ -46,4 +46,10 @@ public class GameRepository : IGameRepository
 
         await _context.SaveChangesAsync();
     }
+    public async Task<List<Game>> GetByIdsAsync(IEnumerable<int> ids)
+    {
+        return await _context.Games
+            .Where(game => ids.Contains(game.Id))
+            .ToListAsync();
+    }
 }
