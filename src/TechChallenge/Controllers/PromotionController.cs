@@ -34,7 +34,7 @@ public class PromotionsController : ControllerBase
         if (promotion == null)
         {
             return NotFound(
-                "Promotion not found."
+                "Promoção não encontrada."
             );
         }
 
@@ -81,7 +81,7 @@ public class PromotionsController : ControllerBase
         if (!deleted)
         {
             return NotFound(
-                "Promotion not found."
+                "Promoção não encontrada."
             );
         }
 
