@@ -22,9 +22,7 @@ public class UserService : IUserService
 
         if (existingLogin != null)
         {
-            throw new InvalidOperationException(
-                "Login já cadastrado."
-            );
+            throw new InvalidOperationException("Login já cadastrado.");
         }
 
         var existingEmail =
@@ -32,9 +30,7 @@ public class UserService : IUserService
 
         if (existingEmail != null)
         {
-            throw new InvalidOperationException(
-                "E-mail já cadastrado."
-            );
+            throw new InvalidOperationException("E-mail já cadastrado.");
         }
 
         var user = new User(
@@ -59,19 +55,14 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<User?> AuthenticateAsync(
-        string login,
-        string password
-    )
+    public async Task<User?> AuthenticateAsync(string login, string password)
     {
-        var user =
-            await _userRepository.GetByLoginAsync(login);
+        var user = await _userRepository.GetByLoginAsync(login);
 
         if (user == null)
             return null;
 
-        return user.autenticar(login, password)
-            ? user
-            : null;
+        // Comparação simples (texto puro)
+        return user.Password == password ? user : null;
     }
 }

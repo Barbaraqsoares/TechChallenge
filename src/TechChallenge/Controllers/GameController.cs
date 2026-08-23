@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Services;
@@ -12,6 +9,7 @@ namespace TechChallenge.Controllers;
 
 [ApiController]
 [Route("[controller]")]
+[Authorize]
 public class GameController : ControllerBase
 {
     private readonly IGameService _gameService;
@@ -25,6 +23,7 @@ public class GameController : ControllerBase
     /// </summary>
     /// <returns></returns>
     [HttpGet]
+    [Authorize(Roles = "Admin,Client")]
     public async Task<IActionResult> GetallGames()
     {
         var games = await _gameService.GetAllAsync();
@@ -38,6 +37,7 @@ public class GameController : ControllerBase
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,Client")]
     public async Task<IActionResult> GetGameById(int id)
     {
         var game = await _gameService.GetByIdAsync(id);
@@ -57,6 +57,7 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] Game game)
     {
         var createdGame = await _gameService.CreateAsync(game);
@@ -74,6 +75,7 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateGame(
         int id,
         [FromBody] Game game
@@ -97,6 +99,7 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteGame(int id)
     {
         var deleted =

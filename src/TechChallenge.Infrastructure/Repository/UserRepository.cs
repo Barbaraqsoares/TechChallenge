@@ -15,14 +15,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByLoginAsync(string login)
     {
-        return await _context.Users
-            .FirstOrDefaultAsync(x => x.Login == login);
+        return await _context.Users.FirstOrDefaultAsync(x => x.Login == login);
     }
 
     public async Task<User?> GetByEmailAsync(string email)
     {
-        return await _context.Users
-            .FirstOrDefaultAsync(x => x.Email == email);
+        return await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
     }
 
     public async Task<User> AddAsync(User user)

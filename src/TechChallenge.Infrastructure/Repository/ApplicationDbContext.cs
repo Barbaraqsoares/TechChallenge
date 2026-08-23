@@ -3,7 +3,7 @@ using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : DbContext(options)
 {
     public ApplicationDbContext(
         DbContextOptions<ApplicationDbContext> options ) : base(options)
@@ -22,5 +22,18 @@ public class ApplicationDbContext : DbContext
             .HasMany(promotion => promotion.Games)
             .WithMany(game => game.Promotions)
             .UsingEntity(join => join.ToTable("GamePromotions"));
+
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseSqlServer(_connectionString);
+        }
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }

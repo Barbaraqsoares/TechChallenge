@@ -1,20 +1,27 @@
-﻿namespace TechChallenge.Domain.Entity;
+﻿using System.Net.NetworkInformation;
 
-public class User : UserBase
+namespace TechChallenge.Domain.Entity;
+
+public class User : EntityBAse
 {
-    public string Name { get; set; }
-    public string Email { get; set; }
+    public required string Name { get; set; }
+    public required string Email { get; set; }
+    public string Login { get; set; }
+    public required string Password { get; set; }
+    public PerfilEnum Perfil { get; set; }
 
-    public User(string name, PerfilEnum perfil, string email, string password, string login)
-        : base(login, password)
+    /*public ICollection<Game> Games { get; set; } = new List<Games>();*/
+
+    public User(string name, PerfilEnum perfil, string email, string login)
     {
         Name = name.Trim();
         Perfil = perfil;
         ValidateEmail(email);
         Email = email.Trim();
+        Login = login;
     }
 
-    public void Update(string name, PerfilEnum perfil, string email, string password)
+    public void Update(string name, string email, string password)
     {
         Name = name.Trim();
         Perfil = perfil;
