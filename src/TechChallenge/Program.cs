@@ -1,13 +1,18 @@
-using Desafio.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using TechChallenge.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configuração da autenticação JWT
+// JWT settings via configuration (appsettings.json / environment)
+var jwtSection = builder.Configuration.GetSection("Jwt");
+builder.Services.Configure<JwtSettings>(jwtSection);
+var jwtSettings = jwtSection.Get<JwtSettings>() ?? new TechChallenge.DependencyInjection.JwtSettings();
+
+// Configuração da autenticação JWT usando DI/config
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -15,6 +20,8 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
+    options.RequireHttpsMetadata = builder.Environment.IsDevelopment() ? false : true;
+    options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -22,10 +29,10 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
 
-        ValidIssuer = "suaempresa.com",       // quem emite o token
-        ValidAudience = "suaempresa.com",     // quem consome o token
+        ValidIssuer = jwtSettings.Issuer,
+        ValidAudience = jwtSettings.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("chave-secreta-super-segura"))
+            Encoding.UTF8.GetBytes(jwtSettings.Secret))
     };
 });
 
@@ -81,6 +88,11 @@ builder.Services.AddSwaggerGen(c =>
     }
 });
 
+
+// Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
+builder.Services.AddInfrastructure(builder.Configuration);
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -88,7 +100,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Desafio API v1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TechChallange API v1");
     c.RoutePrefix = string.Empty; // abre direto na raiz
 });
 
@@ -97,8 +109,6 @@ app.UseHttpsRedirection();
 // Ativar autenticação e autorização
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseMiddleware<JwtMiddleware>();
 
 app.MapControllers();
 
