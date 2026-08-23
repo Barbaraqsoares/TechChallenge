@@ -10,7 +10,7 @@ namespace TechChallenge.Infrastructure.Repository.Configuration
         {
             builder.ToTable("Users");
             builder.HasKey(t => t.Id);
-            builder.Property(t => t.Id).HasColumnType("int").ValueGeneratedNever().UseIdentityColumn();
+            builder.Property(t => t.Id).HasColumnType("int").UseIdentityColumn();
             builder.Property(t => t.Name).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
             builder.Property(t => t.Email).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
             builder.Property(t => t.Login).HasMaxLength(50).HasColumnType("varchar(50)");
