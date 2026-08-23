@@ -33,13 +33,14 @@ public class UserService : IUserService
             throw new InvalidOperationException("E-mail já cadastrado.");
         }
 
-        var user = new User(
-            request.Name,
-            PerfilEnum.Client,
-            request.Email,
-            request.Password,
-            request.Login
-        );
+        var user = new User
+        {
+            Name = request.Name,
+            Email = request.Email,
+            Login = request.Login,
+            Password = request.Password,
+            Perfil = PerfilEnum.Client
+        };
 
         var createdUser =
             await _userRepository.AddAsync(user);
