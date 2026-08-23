@@ -10,10 +10,10 @@ public class UserTests
         // Arrange + Act
         var user = new User(
             "Gabriela",
-            PerfilEnum.Client,
             "gabriela@email.com",
+            "gabriela",
             "Password@123",
-            "gabriela"
+            PerfilEnum.Client           
         );
 
         // Assert
@@ -31,10 +31,10 @@ public class UserTests
         {
             new User(
                 "Gabriela",
-                PerfilEnum.Client,
                 "gabriela@email.com",
+                "gabriela",
                 "Ab@123",
-                "gabriela"
+                PerfilEnum.Client
             );
         });
     }
@@ -46,10 +46,10 @@ public class UserTests
         {
             new User(
                 "Gabriela",
-                PerfilEnum.Client,
                 "gabriela@email.com",
+                "gabriela",
                 "Password@",
-                "gabriela"
+                PerfilEnum.Client
             );
         });
     }
@@ -61,10 +61,10 @@ public class UserTests
         {
             new User(
                 "Gabriela",
-                PerfilEnum.Client,
                 "gabriela@email.com",
+                "gabriela",
                 "12345678@",
-                "gabriela"
+                PerfilEnum.Client
             );
         });
     }
@@ -76,10 +76,10 @@ public class UserTests
         {
             new User(
                 "Gabriela",
-                PerfilEnum.Client,
                 "gabriela@email.com",
+                "gabriela",
                 "Password123",
-                "gabriela"
+                PerfilEnum.Client
             );
         });
     }
@@ -91,10 +91,10 @@ public class UserTests
         {
             new User(
                 "Gabriela",
-                PerfilEnum.Client,
                 "invalid-email",
+                "gabriela",
                 "Password@123",
-                "gabriela"
+                PerfilEnum.Client
             );
         });
     }
@@ -108,10 +108,10 @@ public class UserTests
         // Act
         var user = new User(
             "Gabriela",
-            PerfilEnum.Client,
             "gabriela@email.com",
+            "gabriela",
             "Password@123",
-            "gabriela"
+            PerfilEnum.Client
         );
 
         var afterCreation = DateTime.Now;
@@ -130,10 +130,10 @@ public class UserTests
         // Arrange
         var user = new User(
             "Gabriela",
-            PerfilEnum.Client,
             "gabriela@email.com",
+            "gabriela",
             "Password@123",
-            "gabriela"
+            PerfilEnum.Client
         );
 
         // Act + Assert
@@ -141,9 +141,9 @@ public class UserTests
         {
             user.Update(
                 "Gabriela",
-                PerfilEnum.Client,
                 "gabriela@email.com",
-                "123"
+                "123",
+                PerfilEnum.Client
             );
         });
     }
@@ -154,10 +154,10 @@ public class UserTests
         // Arrange
         var user = new User(
             "Gabriela",
-            PerfilEnum.Client,
             "gabriela@email.com",
+            "gabriela",
             "Password@123",
-            "gabriela"
+            PerfilEnum.Client
         );
 
         // Act + Assert
@@ -165,9 +165,9 @@ public class UserTests
         {
             user.Update(
                 "Gabriela",
-                PerfilEnum.Client,
-                "invalid-email",
-                "Password@123"
+                 "invalid-email",
+                "Password@123",
+                PerfilEnum.Client
             );
         });
     }

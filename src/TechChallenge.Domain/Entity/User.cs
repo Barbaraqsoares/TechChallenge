@@ -5,15 +5,11 @@ namespace TechChallenge.Domain.Entity;
 
 public class User : EntityBAse
 {
-    public required string Name { get; set; }
-    public required string Email { get; set; }
+    public string Name { get; set; }
+    public string Email { get; set; }
     public string Login { get; set; }
-    public required string Password { get; set; }
+    public string Password { get; set; }
     public PerfilEnum Perfil { get; set; }
-
-    /*public ICollection<Game> Games { get; set; } = new List<Games>();*/
-
-
 
     public User(string name, string email, string login, string passaword, PerfilEnum perfil)
     {

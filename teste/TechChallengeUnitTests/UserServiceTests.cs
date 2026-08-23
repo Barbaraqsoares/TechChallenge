@@ -16,10 +16,10 @@ public class UserServiceTests
 
         var existingUser = new User(
             "Existing User",
-            PerfilEnum.Client,
             "existing@email.com",
+            "gabriela",
             "Password@123",
-            "gabriela"
+            PerfilEnum.Client
         );
 
         repositoryMock
@@ -51,10 +51,10 @@ public class UserServiceTests
 
         var existingUser = new User(
             "Existing User",
-            PerfilEnum.Client,
             "existing@email.com",
+            "existinguser",
             "Password@123",
-            "existinguser"
+            PerfilEnum.Client
         );
 
         repositoryMock
