@@ -50,10 +50,10 @@ namespace TechChallenge.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("PasswordHash")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
 
                     b.Property<int>("Perfil")
                         .HasColumnType("int");

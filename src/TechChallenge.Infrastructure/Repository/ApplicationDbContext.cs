@@ -15,7 +15,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
      * Example:
      * public DbSet<YourEntity> YourEntities { get; set; }
      */
-    public DbSet<User> User { get; set; }
+    // Removida propriedade duplicada 'User' para evitar confusão com 'Users'
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

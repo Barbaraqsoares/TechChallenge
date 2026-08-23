@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
+using System.Security.Cryptography;
 using TechChallenge.DependencyInjection;
 using TechChallenge.Infrastructure.Repository;
 
@@ -28,6 +29,36 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = builder.Environment.IsDevelopment() ? false : true;
     options.SaveToken = true;
+
+    // Preferir secret em Base64 (32+ bytes). Se não for Base64 válido ou for curto, aplica fallback seguro.
+    byte[] keyBytes;
+    if (!string.IsNullOrWhiteSpace(jwtSettings.Secret))
+    {
+        try
+        {
+            keyBytes = Convert.FromBase64String(jwtSettings.Secret);
+        }
+        catch
+        {
+            // Secret não é Base64 válido — derive 32 bytes via SHA256 da string para garantir tamanho mínimo
+            using var sha = SHA256.Create();
+            keyBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(jwtSettings.Secret));
+        }
+
+        if (keyBytes.Length < 32)
+        {
+            using var sha = SHA256.Create();
+            keyBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(jwtSettings.Secret ?? string.Empty));
+        }
+    }
+    else
+    {
+        // Secret ausente: gerar chave aleatória temporária (não recomendado para produção)
+        keyBytes = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(keyBytes);
+    }
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -37,8 +68,7 @@ builder.Services.AddAuthentication(options =>
 
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtSettings.Secret))
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
     };
 });
 

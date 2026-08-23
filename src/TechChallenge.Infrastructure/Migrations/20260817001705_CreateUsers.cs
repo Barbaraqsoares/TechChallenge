@@ -20,7 +20,7 @@ public partial class CreateUsers : Migration
                 Name = table.Column<string>(type: "varchar(50)", maxLength: 100, nullable: false),
                 Email = table.Column<string>(type: "varchar(50)", maxLength: 100, nullable: false),
                 Login = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                Password = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
+                PasswordHash = table.Column<string>(type: "varchar(256)", maxLength: 256, nullable: false),
                 Perfil = table.Column<int>(type: "int", nullable: false),
                 CreatedAt = table.Column<DateTime>(type: "DATETIME", nullable: false),
                 UpdatedAt = table.Column<DateTime>(type: "DATETIME", nullable: false)

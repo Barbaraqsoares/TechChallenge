@@ -6,8 +6,5 @@ public interface IUserService
 {
     Task<User> CreateAsync(User user);
 
-    Task<User?> AuthenticateAsync(
-        string login,
-        string password
-    );
+    Task<User?> AuthenticateAsync(string login, string password);
 }

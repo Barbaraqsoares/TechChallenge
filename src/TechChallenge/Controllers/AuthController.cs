@@ -5,7 +5,6 @@ using System.Security.Claims;
 using System.Text;
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
-using TechChallenge.Domain.Services;
 
 namespace TechChallenge.Controllers;
 
@@ -22,31 +21,31 @@ public class AuthController : ControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// Login
+    /// </summary>
+    /// <param name="login"></param>
+    /// <returns></returns>
     [HttpPost("login")]
-    public async Task<IActionResult> Login(
-    [FromBody] UsuarioLogin login
-)
+    public async Task<IActionResult> Login([FromBody] UsuarioLogin login)
     {
-        var user = await _userService.AuthenticateAsync(
-            login.Username,
-            login.Password
-        );
+        var user = await _userService.AuthenticateAsync(login.Login, login.Password);
 
         if (user == null)
         {
-            return Unauthorized(
-                "Usuário ou senha inválidos"
-            );
+            return Unauthorized("Usuário ou senha inválidos");
         }
 
-        var token = GerarToken(
-            user.Login,
-            user.Perfil.ToString()
-        );
+        var token = GerarToken(user.Login, user.Perfil.ToString());
 
         return Ok(new { token });
     }
 
+    /// <summary>
+    /// Registra usuário
+    /// </summary>
+    /// <param name="user"></param>
+    /// <returns></returns>
     [HttpPost("register")]
     public async Task<IActionResult> Register(
     [FromBody] User user
@@ -91,6 +90,6 @@ public class AuthController : ControllerBase
 
 public class UsuarioLogin
 {
-    public string Username { get; set; }
+    public string Login { get; set; }
     public string Password { get; set; }
 }
