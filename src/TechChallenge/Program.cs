@@ -1,13 +1,10 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+
 using Serilog;
-using System.Reflection;
 using TechChallenge.Configuration;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Infrastructure.Authentication;
-using TechChallenge.Infrastructure.Repository;
-using TechChallenge.Infrastructure.Repository.Configuration;
 using TechChallenge.Middleware;
+using TechChallenge.Extensions;
 
 try
 {
@@ -15,105 +12,25 @@ try
 
     builder.Host.UseSerilogLogging();
 
-    var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
+    // Mantém configuração do JWT disponível via IOptions<JwtSettings>
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SecaoConfiguracao));
 
-    // JWT settings via configuration (appsettings.json / environment)
-    var jwtSection = builder.Configuration.GetSection("Jwt");
-    builder.Services.Configure<JwtSettings>(jwtSection);
-    var jwtSettings = jwtSection.Get<JwtSettings>() ?? new TechChallenge.Infrastructure.Authentication.JwtSettings();
-
+    // Registrar serviços e documentação usando métodos centralizados
     builder.Services.AddJwtAuthentication(builder.Configuration);
-
-    builder.Services.AddScoped<ITokenService, TokenService>();
-
-    // Add services to the container.
-
-    builder.Services.AddControllers();
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(c =>
-    {
-        c.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Title = "Tech Challenge",
-            Version = "v1",
-            Description = "Tech Challenge",
-            Contact = new OpenApiContact
-            {
-                Name = "Equipe Desafio",
-                Email = "contato@desafio.com"
-            }
-        });
-
-        // Configuração de segurança JWT
-        c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-        {
-            Description = "Insira o token JWT no campo abaixo usando o esquema: Bearer {seu token}",
-            Name = "Authorization",
-            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-            Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-            Scheme = "Bearer"
-        });
-
-        c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-        {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-        });
-
-        // Comentários XML (se habilitado no .csproj)
-        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-        if (File.Exists(xmlPath))
-        {
-            c.IncludeXmlComments(xmlPath);
-        }
-    });
-
-    
-    // Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddSwaggerDocumentation();
+
+    // Serviços da aplicação
+    builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddControllers();
 
     var app = builder.Build();
 
-    // Executa em qualquer ambiente
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    // Migração e seed do banco de dados
+    await app.MigrateAndSeedAsync();
 
-        await context.Database.MigrateAsync();
-
-        await DbInitializer.InitializeAsync(context);
-    }
-
-    
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
-    app.UseRequestLogging();
-
-    // Configure the HTTP request pipeline.
-
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TechChallange API v1");
-        c.RoutePrefix = string.Empty; // abre direto na raiz
-    });
-
-    app.UseHttpsRedirection();
-
-    // Ativar autenticação e autorização
-    app.UseAuthentication();
-    app.UseAuthorization();
-
-    app.MapControllers();
+    // Pipeline de middlewares e roteamento
+    app.UseInfrastructurePipeline();
 
     app.Run();
 }
