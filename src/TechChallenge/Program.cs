@@ -86,7 +86,6 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
-    app.UseRequestLogging();
 
     // Executa em qualquer ambiente
     using (var scope = app.Services.CreateScope())

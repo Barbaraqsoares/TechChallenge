@@ -60,7 +60,7 @@ public class PromotionService : IPromotionService
         if (games.Count != request.GameIds.Distinct().Count())
         {
             throw new ArgumentException(
-                "One or more games were not found."
+                "Um ou mais games não foram encontrados."
             );
         }
 
@@ -72,8 +72,8 @@ public class PromotionService : IPromotionService
             EndDate = request.EndDate,
             IsActive = true,
             CreatedByUserId = adminUserId,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now,
             Games = games
         };
 

@@ -1,5 +1,7 @@
 ﻿using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Exceptions;
+
 
 namespace TechChallenge.Domain.Services;
 
@@ -20,13 +22,13 @@ public class UserGameService : IUserGameService
         _gameRepository = gameRepository;
     }
 
-    public async Task<UserGame> AddGameToLibraryAsync(int userId,int gameId)
+    public async Task<UserGameResponse> AddGameToLibraryAsync(int userId,int gameId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
 
         if (user == null)
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
                 "Usuário não encontrado."
             );
         }
@@ -35,16 +37,12 @@ public class UserGameService : IUserGameService
 
         if (game == null)
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
                 "Jogo não encontrado."
             );
         }
 
-        var existingUserGame =
-            await _userGameRepository.GetByUserAndGameAsync(
-                userId,
-                gameId
-            );
+        var existingUserGame = await _userGameRepository.GetByUserAndGameAsync( userId, gameId);
 
         if (existingUserGame != null)
         {
@@ -57,23 +55,43 @@ public class UserGameService : IUserGameService
         {
             UserId = userId,
             GameId = gameId,
-            PurchasedAt = DateTime.UtcNow
+            PurchasedAt = DateTime.Now
         };
 
-        return await _userGameRepository.AddAsync(userGame);
+        var createdUserGame =
+            await _userGameRepository.AddAsync(userGame);
+
+        return new UserGameResponse
+        {
+            GameId = game.Id,
+            GameName = game.Name,
+            Price = game.Price,
+            PurchasedAt = createdUserGame.PurchasedAt
+        };
     }
 
-    public async Task<List<UserGame>> GetUserLibraryAsync(int userId)
+    public async Task<List<UserGameResponse>> GetUserLibraryAsync(int userId)
     {
         var user = await _userRepository.GetByIdAsync(userId);
 
         if (user == null)
         {
-            throw new InvalidOperationException(
+            throw new NotFoundException(
                 "Usuário não encontrado."
             );
         }
 
-        return await _userGameRepository.GetByUserIdAsync(userId);
+        var userGames =
+            await _userGameRepository.GetByUserIdAsync(userId);
+
+        return userGames
+            .Select(userGame => new UserGameResponse
+            {
+                GameId = userGame.GameId,
+                GameName = userGame.Game.Name,
+                Price = userGame.Game.Price,
+                PurchasedAt = userGame.PurchasedAt
+            })
+            .ToList();
     }
 }

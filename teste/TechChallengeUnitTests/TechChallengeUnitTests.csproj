@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ReqnrollFeatureFile Remove="Features\UserRegistration.feature" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.30" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
@@ -32,10 +36,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\TechChallenge.Domain\TechChallenge.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\" />
   </ItemGroup>
 
 </Project>

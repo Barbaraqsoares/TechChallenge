@@ -20,7 +20,7 @@ public class UserGameRepository : IUserGameRepository
 
     public async Task<List<UserGame>> GetByUserIdAsync(int userId)
     {
-        return await _context.UserGames.Include(ug => ug.Game).Where(ug => ug.UserId == userId).ToListAsync();
+        return await _context.UserGames.Include(ug => ug.Game).Where(ug => ug.UserId == userId).AsNoTracking().ToListAsync();
     }
 
     public async Task<UserGame> AddAsync(UserGame userGame)

@@ -174,7 +174,7 @@ public class GameServiceTests
         // Arrange
         var repositoryMock = new Mock<IGameRepository>();
 
-        var createdAt = DateTime.UtcNow.AddDays(-1);
+        var createdAt = DateTime.Now.AddDays(-1);
 
         var existingGame = new Game
         {
