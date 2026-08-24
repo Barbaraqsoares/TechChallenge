@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.Reflection;
 using TechChallenge.Configuration;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Infrastructure.Authentication;
 using TechChallenge.Infrastructure.Repository;
+using TechChallenge.Infrastructure.Repository.Configuration;
 using TechChallenge.Middleware;
 
 try
@@ -119,8 +121,6 @@ try
 catch (Exception exception) when (exception is not HostAbortedException)
 {
     Log.Fatal(exception, "A aplicação não pôde ser iniciada");
-
-
     return 1;
 }
 finally
