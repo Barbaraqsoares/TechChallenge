@@ -36,9 +36,7 @@ public class UsersController : ControllerBase
     {
         var user = await _userService.GetByIdAsync(id);
 
-        return user == null
-            ? NotFound()
-            : Ok(user);
+        return user == null ? NotFound() : Ok(user);
     }
 
     /// <summary>
@@ -51,8 +49,6 @@ public class UsersController : ControllerBase
     {
         var deleted = await _userService.DeleteAsync(id);
 
-        return deleted
-            ? NoContent()
-            : NotFound();
+        return deleted ? NoContent() : NotFound();
     }
 }

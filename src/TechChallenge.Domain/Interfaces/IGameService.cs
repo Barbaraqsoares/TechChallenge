@@ -1,7 +1,6 @@
 ﻿using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Domain.Interfaces;
-
 public interface IGameService
 {
     Task<IEnumerable<Game>> GetAllAsync();

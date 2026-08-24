@@ -9,10 +9,7 @@ public class PromotionService : IPromotionService
     private readonly IPromotionRepository _promotionRepository;
     private readonly IGameRepository _gameRepository;
 
-    public PromotionService(
-        IPromotionRepository promotionRepository,
-        IGameRepository gameRepository
-    )
+    public PromotionService(IPromotionRepository promotionRepository, IGameRepository gameRepository)
     {
         _promotionRepository = promotionRepository;
         _gameRepository = gameRepository;
@@ -20,49 +17,26 @@ public class PromotionService : IPromotionService
     private static void ValidatePromotion(CreatePromotionRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            throw new ArgumentException(
-                "O nome da promoção é obrigatório."
-            );
-        }
+            throw new ArgumentException("O nome da promoção é obrigatório.");
 
         if (request.Discount <= 0 || request.Discount > 100)
-        {
-            throw new ArgumentException(
-                "Desconto precisa ser maior que 0 e até 100."
-            );
-        }
+            throw new ArgumentException("Desconto precisa ser maior que 0 e até 100.");
 
         if (request.StartDate >= request.EndDate)
-        {
-            throw new ArgumentException(
-                "A data de inicio precisa ser menor que a data fim."
-            );
-        }
+            throw new ArgumentException("A data de inicio precisa ser menor que a data fim.");
 
         if (request.GameIds.Count == 0)
-        {
-            throw new ArgumentException(
-                "Ao menos 1 game precisa ser selecionado."
-            );
-        }
-
+            throw new ArgumentException("Ao menos 1 game precisa ser selecionado.");
     }
+
     public async Task<PromotionResponse> CreateAsync(CreatePromotionRequest request, int adminUserId)
     {
         ValidatePromotion(request);
 
-        var games =
-            await _gameRepository.GetByIdsAsync(
-                request.GameIds
-            );
+        var games = await _gameRepository.GetByIdsAsync(request.GameIds);
 
         if (games.Count != request.GameIds.Distinct().Count())
-        {
-            throw new ArgumentException(
-                "Um ou mais games não foram encontrados."
-            );
-        }
+            throw new ArgumentException("Um ou mais games não foram encontrados.");
 
         var promotion = new Promotion
         {
@@ -77,10 +51,7 @@ public class PromotionService : IPromotionService
             Games = games
         };
 
-        var createdPromotion =
-            await _promotionRepository.AddAsync(
-                promotion
-            );
+        var createdPromotion = await _promotionRepository.AddAsync(promotion);
 
         return MapToResponse(createdPromotion);
     }
@@ -101,39 +72,33 @@ public class PromotionService : IPromotionService
                 .ToList()
         };
     }
-    public async Task<IEnumerable<PromotionResponse>>
-    GetAllAsync()
+
+    public async Task<IEnumerable<PromotionResponse>> GetAllAsync()
     {
-        var promotions =
-            await _promotionRepository.GetAllAsync();
+        var promotions = await _promotionRepository.GetAllAsync();
 
         return promotions.Select(MapToResponse);
     }
+
     public async Task<PromotionResponse?> GetByIdAsync(int id)
     {
-        var promotion =
-            await _promotionRepository.GetByIdAsync(id);
+        var promotion = await _promotionRepository.GetByIdAsync(id);
 
         if (promotion == null)
             return null;
 
         return MapToResponse(promotion);
     }
+
     public async Task<bool> DeleteAsync(int id)
     {
-        var promotion =
-            await _promotionRepository.GetByIdAsync(id);
+        var promotion = await _promotionRepository.GetByIdAsync(id);
 
         if (promotion == null)
             return false;
 
-        await _promotionRepository.DeleteAsync(
-            promotion
-        );
+        await _promotionRepository.DeleteAsync(promotion);
 
         return true;
     }
-
-
-
 }

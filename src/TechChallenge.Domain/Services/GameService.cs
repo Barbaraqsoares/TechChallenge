@@ -69,17 +69,9 @@ public class GameService : IGameService
     private static void ValidateGame(Game game)
     {
         if (string.IsNullOrWhiteSpace(game.Name))
-        {
-            throw new ArgumentException(
-                "O nome do jogo é obrigatório."
-            );
-        }
+            throw new ArgumentException("O nome do jogo é obrigatório.");
 
         if (game.Price < 0)
-        {
-            throw new ArgumentException(
-                "O preço do jogo não pode ser negativo."
-            );
-        }
+            throw new ArgumentException("O preço do jogo não pode ser negativo.");
     }
 }

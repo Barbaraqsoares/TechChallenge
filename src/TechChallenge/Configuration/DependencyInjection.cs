@@ -58,18 +58,15 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var jwt = configuration
-            .GetSection(JwtSettings.SecaoConfiguracao)
-            .Get<JwtSettings>()
-            ?? throw new InvalidOperationException(
-                "A seção 'Jwt' não foi encontrada na configuração.");
+        var jwt = configuration.GetSection(JwtSettings.SecaoConfiguracao).Get<JwtSettings>() 
+            ?? 
+            throw new InvalidOperationException("A seção 'Jwt' não foi encontrada na configuração.");
 
         if (jwt.SecretKey.Length < 32)
         {
             // O HMAC-SHA256 exige uma chave de 256 bits. Com menos que isso a
             // aplicação só falharia ao validar o primeiro token, em runtime.
-            throw new InvalidOperationException(
-                "A chave 'Jwt:SecretKey' precisa ter no mínimo 32 caracteres.");
+            throw new InvalidOperationException("A chave 'Jwt:SecretKey' precisa ter no mínimo 32 caracteres.");
         }
 
         services.AddAuthentication(options =>

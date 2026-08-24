@@ -10,6 +10,5 @@ public class Game
     public bool IsMultiplayer { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public ICollection<Promotion> Promotions { get; set; }
-    = new List<Promotion>();
+    public ICollection<Promotion> Promotions { get; set; } = new List<Promotion>();
 }

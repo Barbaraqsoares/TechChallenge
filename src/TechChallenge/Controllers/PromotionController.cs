@@ -22,8 +22,7 @@ public class PromotionsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var promotions =
-            await _promotionService.GetAllAsync();
+        var promotions = await _promotionService.GetAllAsync();
 
         return Ok(promotions);
     }
@@ -36,15 +35,10 @@ public class PromotionsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var promotion =
-            await _promotionService.GetByIdAsync(id);
+        var promotion = await _promotionService.GetByIdAsync(id);
 
         if (promotion == null)
-        {
-            return NotFound(
-                "Promoção não encontrada."
-            );
-        }
+            return NotFound("Promoção não encontrada.");
 
         return Ok(promotion);
     }
@@ -56,32 +50,16 @@ public class PromotionsController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] CreatePromotionRequest request
-    )
+    public async Task<IActionResult> Create([FromBody] CreatePromotionRequest request)
     {
-        var userIdClaim =
-            User.FindFirst(
-                System.Security.Claims.ClaimTypes.NameIdentifier
-            );
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
 
-        if (userIdClaim == null ||
-            !int.TryParse(userIdClaim.Value, out var adminUserId))
-        {
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var adminUserId))
             return Unauthorized();
-        }
 
-        var promotion =
-            await _promotionService.CreateAsync(
-                request,
-                adminUserId
-            );
+        var promotion = await _promotionService.CreateAsync(request, adminUserId);
 
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = promotion.Id },
-            promotion
-        );
+        return CreatedAtAction(nameof(GetById), new { id = promotion.Id }, promotion);
     }
 
     /// <summary>
@@ -93,15 +71,10 @@ public class PromotionsController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted =
-            await _promotionService.DeleteAsync(id);
+        var deleted = await _promotionService.DeleteAsync(id);
 
         if (!deleted)
-        {
-            return NotFound(
-                "Promoção não encontrada."
-            );
-        }
+            return NotFound("Promoção não encontrada.");
 
         return NoContent();
     }

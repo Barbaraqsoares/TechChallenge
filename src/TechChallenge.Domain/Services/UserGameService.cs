@@ -1,6 +1,7 @@
 ﻿using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Exceptions;
+using TechChallenge.Domain.Models.UserGame;
 
 
 namespace TechChallenge.Domain.Services;
@@ -27,29 +28,17 @@ public class UserGameService : IUserGameService
         var user = await _userRepository.GetByIdAsync(userId);
 
         if (user == null)
-        {
-            throw new NotFoundException(
-                "Usuário não encontrado."
-            );
-        }
+            throw new NotFoundException("Usuário não encontrado.");
 
         var game = await _gameRepository.GetByIdAsync(gameId);
 
         if (game == null)
-        {
-            throw new NotFoundException(
-                "Jogo não encontrado."
-            );
-        }
+            throw new NotFoundException("Jogo não encontrado.");
 
         var existingUserGame = await _userGameRepository.GetByUserAndGameAsync( userId, gameId);
 
         if (existingUserGame != null)
-        {
-            throw new InvalidOperationException(
-                "O jogo já está na biblioteca do usuário."
-            );
-        }
+            throw new InvalidOperationException("O jogo já está na biblioteca do usuário.");
 
         var userGame = new UserGame
         {
@@ -58,8 +47,7 @@ public class UserGameService : IUserGameService
             PurchasedAt = DateTime.Now
         };
 
-        var createdUserGame =
-            await _userGameRepository.AddAsync(userGame);
+        var createdUserGame = await _userGameRepository.AddAsync(userGame);
 
         return new UserGameResponse
         {
@@ -75,23 +63,26 @@ public class UserGameService : IUserGameService
         var user = await _userRepository.GetByIdAsync(userId);
 
         if (user == null)
+            throw new NotFoundException("Usuário não encontrado.");
+
+        var userGames = await _userGameRepository.GetByUserIdAsync(userId);
+
+        return userGames.Select(userGame => new UserGameResponse()
         {
-            throw new NotFoundException(
-                "Usuário não encontrado."
-            );
-        }
+            GameId = userGame.GameId,
+            GameName = userGame.Game.Name,
+            Price = userGame.Game.Price,
+            PurchasedAt = userGame.PurchasedAt
+        }).ToList();
+    }
 
-        var userGames =
-            await _userGameRepository.GetByUserIdAsync(userId);
+    Task<UserGameResponse> IUserGameService.AddGameToLibraryAsync(int userId, int gameId)
+    {
+        throw new NotImplementedException();
+    }
 
-        return userGames
-            .Select(userGame => new UserGameResponse
-            {
-                GameId = userGame.GameId,
-                GameName = userGame.Game.Name,
-                Price = userGame.Game.Price,
-                PurchasedAt = userGame.PurchasedAt
-            })
-            .ToList();
+    Task<List<UserGameResponse>> IUserGameService.GetUserLibraryAsync(int userId)
+    {
+        throw new NotImplementedException();
     }
 }

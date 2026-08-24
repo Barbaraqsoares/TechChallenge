@@ -20,20 +20,14 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Registra usuário
     /// </summary>
-    /// <param name="user"></param>
+    /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("register")]
-    public async Task<IActionResult> Register(
-    [FromBody] RegisterUserRequest request
-)
+    public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
-        var createdUser =
-            await _userService.CreateAsync(request);
+        var createdUser =  await _userService.CreateAsync(request);
 
-        return Created(
-            $"/api/users/{createdUser.Id}",
-            createdUser
-        );
+        return Created($"/api/users/{createdUser.Id}", createdUser);
     }
 
     /// <summary>
@@ -42,23 +36,15 @@ public class AuthController : ControllerBase
     /// <param name="login"></param>
     /// <returns></returns>
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] UsuarioLogin login)
+    public async Task<IActionResult> Login([FromBody] UserLogin login)
     {
         var user = await _userService.AuthenticateAsync(login.Login, login.Password);
 
         if (user == null)
-        {
             return Unauthorized("Usuário ou senha inválidos");
-        }
 
         var token = _tokenService.GenerateToken(user);
 
         return Ok(token);
     } 
-}
-
-public class UsuarioLogin
-{
-    public string Login { get; set; }
-    public string Password { get; set; }
 }

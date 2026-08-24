@@ -1,4 +1,6 @@
-﻿public class UserGameResponse
+﻿namespace TechChallenge.Domain.Models.UserGame;
+
+public class UserGameResponse
 {
     public int GameId { get; set; }
     public string GameName { get; set; }

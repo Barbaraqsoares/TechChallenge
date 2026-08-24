@@ -1,5 +1,4 @@
 ﻿using System.Net.Mail;
-using System.Net.NetworkInformation;
 
 namespace TechChallenge.Domain.Entity;
 
@@ -11,9 +10,7 @@ public class User : EntityBAse
     public string Password { get; set; }
     public PerfilEnum Perfil { get; set; }
 
-    protected User()
-    {
-    }
+    protected User() { }
 
     public User(string name, string email, string login, string password, PerfilEnum perfil)
     {
@@ -25,16 +22,12 @@ public class User : EntityBAse
         Perfil = perfil;
     }
 
-
-
     public void Update(string name, string email, string password, PerfilEnum perfil)
     {
         Name = name.Trim();
         Perfil = perfil;
-
         ValidateEmail(email);
         Email = email.Trim();
-
         SetPassword(password);
     }
 
@@ -52,30 +45,22 @@ public class User : EntityBAse
 
         if (password.Length < 8)
         {
-            throw new ArgumentException(
-                "A senha deve possuir no mínimo 8 caracteres."
-            );
+            throw new ArgumentException("A senha deve possuir no mínimo 8 caracteres.");
         }
 
         if (!password.Any(char.IsLetter))
         {
-            throw new ArgumentException(
-                "A senha deve possuir pelo menos uma letra."
-            );
+            throw new ArgumentException("A senha deve possuir pelo menos uma letra.");
         }
 
         if (!password.Any(char.IsDigit))
         {
-            throw new ArgumentException(
-                "A senha deve possuir pelo menos um número."
-            );
+            throw new ArgumentException("A senha deve possuir pelo menos um número.");
         }
 
         if (!password.Any(c => !char.IsLetterOrDigit(c)))
         {
-            throw new ArgumentException(
-                "A senha deve possuir pelo menos um caractere especial."
-            );
+            throw new ArgumentException("A senha deve possuir pelo menos um caractere especial.");
         }
     }
 

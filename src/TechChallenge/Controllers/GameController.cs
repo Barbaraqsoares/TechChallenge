@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
-using TechChallenge.Domain.Services;
-using Microsoft.AspNetCore.Authorization;
 
 namespace TechChallenge.Controllers;
 
@@ -43,9 +41,7 @@ public class GameController : ControllerBase
         var game = await _gameService.GetByIdAsync(id);
 
         if (game == null)
-        {
             return NotFound("Jogo não encontrado.");
-        }
 
         return Ok(game);
     }
@@ -61,31 +57,22 @@ public class GameController : ControllerBase
     {
         var createdGame = await _gameService.CreateAsync(game);
 
-        return CreatedAtAction(
-            nameof(GetGameById),
-            new { id = createdGame.Id },
-            createdGame
-        );
+        return CreatedAtAction(nameof(GetGameById), new { id = createdGame.Id }, createdGame);
     }
     /// <summary>
     /// Atualiza um game existente pelo ID (apenas para administradores).
     /// </summary>
     /// <param name="id"></param>
+    /// <param name="game"-></param>
     /// <returns></returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> UpdateGame(
-        int id,
-        [FromBody] Game game
-    )
+    public async Task<IActionResult> UpdateGame(int id, [FromBody] Game game)
     {
-        var updatedGame =
-            await _gameService.UpdateAsync(id, game);
+        var updatedGame = await _gameService.UpdateAsync(id, game);
 
         if (updatedGame == null)
-        {
             return NotFound("Jogo não encontrado.");
-        }
 
         return Ok(updatedGame);
     }
@@ -99,13 +86,10 @@ public class GameController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteGame(int id)
     {
-        var deleted =
-            await _gameService.DeleteAsync(id);
+        var deleted = await _gameService.DeleteAsync(id);
 
         if (!deleted)
-        {
             return NotFound("Jogo não encontrado.");
-        }
 
         return NoContent();
     }

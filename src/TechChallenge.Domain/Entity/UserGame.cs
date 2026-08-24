@@ -10,6 +10,3 @@ public class UserGame : EntityBAse
 
     public DateTime PurchasedAt { get; set; } = DateTime.Now;
 }
-
-
-

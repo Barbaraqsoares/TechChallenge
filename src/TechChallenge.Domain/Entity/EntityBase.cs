@@ -1,6 +1,4 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace TechChallenge.Domain.Entity;
+﻿namespace TechChallenge.Domain.Entity;
 
 public class EntityBAse
 {

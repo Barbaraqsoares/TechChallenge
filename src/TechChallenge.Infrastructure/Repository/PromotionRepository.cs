@@ -15,18 +15,12 @@ public class PromotionRepository : IPromotionRepository
 
     public async Task<IEnumerable<Promotion>> GetAllAsync()
     {
-        return await _context.Promotions
-            .Include(promotion => promotion.Games)
-            .ToListAsync();
+        return await _context.Promotions.Include(promotion => promotion.Games).ToListAsync();
     }
 
     public async Task<Promotion?> GetByIdAsync(int id)
     {
-        return await _context.Promotions
-            .Include(promotion => promotion.Games)
-            .FirstOrDefaultAsync(
-                promotion => promotion.Id == id
-            );
+        return await _context.Promotions.Include(promotion => promotion.Games).FirstOrDefaultAsync(promotion => promotion.Id == id);
     }
 
     public async Task<Promotion> AddAsync(Promotion promotion)
@@ -45,7 +39,6 @@ public class PromotionRepository : IPromotionRepository
     public async Task DeleteAsync(Promotion promotion)
     {
         _context.Promotions.Remove(promotion);
-
         await _context.SaveChangesAsync();
     }
 }

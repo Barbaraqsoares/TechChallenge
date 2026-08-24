@@ -1,7 +1,6 @@
 ﻿using TechChallenge.Domain.Models.Promotion;
 
 namespace TechChallenge.Domain.Interfaces;
-
 public interface IPromotionService
 {
     Task<IEnumerable<PromotionResponse>> GetAllAsync();

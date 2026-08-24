@@ -15,23 +15,16 @@ public class UserService : IUserService
 
     public async Task<UserResponse> CreateAsync(RegisterUserRequest request)
     {
-        var existingLogin =
-            await _userRepository.GetByLoginAsync(request.Login);
+        var existingLogin = await _userRepository.GetByLoginAsync(request.Login);
 
         if (existingLogin != null)
-        {
             throw new InvalidOperationException("Login já cadastrado.");
-        }
 
-        var existingEmail =
-            await _userRepository.GetByEmailAsync(request.Email);
+        var existingEmail = await _userRepository.GetByEmailAsync(request.Email);
 
         if (existingEmail != null)
-        {
             throw new InvalidOperationException("E-mail já cadastrado.");
-        }
 
-        
         var user = new User(
             request.Name,
             request.Email,
@@ -40,8 +33,7 @@ public class UserService : IUserService
             PerfilEnum.Client
         );
 
-        var createdUser =
-            await _userRepository.AddAsync(user);
+        var createdUser = await _userRepository.AddAsync(user);
 
         return new UserResponse
         {

@@ -59,12 +59,7 @@ public class ExceptionHandlingMiddleware
             Title = title,
             Instance = context.Request.Path,
 
-            // A mensagem da exceção só é exposta em erros de negócio, que são escritos
-            // para o usuário. Em erros inesperados devolvemos um texto genérico para
-            // não vazar detalhes internos da aplicação.
-            Detail = isUnexpectedError
-                ? "Ocorreu um erro inesperado. Informe o traceId ao suporte."
-                : exception.Message
+            Detail = isUnexpectedError ? "Ocorreu um erro inesperado. Informe o traceId ao suporte." : exception.Message
         };
 
         problemDetails.Extensions["traceId"] = context.TraceIdentifier;
@@ -86,7 +81,6 @@ public class ExceptionHandlingMiddleware
     /// </summary>
     private void WriteLog(HttpContext context, Exception exception, int statusCode, bool isUnexpectedError)
     {
-        // Erro inesperado é falha nossa: nível Error e com o stack trace completo.
         if (isUnexpectedError)
         {
             _logger.LogError(

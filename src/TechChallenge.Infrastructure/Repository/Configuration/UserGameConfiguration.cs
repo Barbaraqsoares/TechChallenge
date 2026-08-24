@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TechChallenge.Domain.Entity;
 
 namespace TechChallenge.Infrastructure.Repository.Configurations;
-
 public class UserGameConfiguration : IEntityTypeConfiguration<UserGame>
 {
     public void Configure(EntityTypeBuilder<UserGame> builder)

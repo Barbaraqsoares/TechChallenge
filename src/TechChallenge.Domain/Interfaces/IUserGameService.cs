@@ -1,4 +1,6 @@
-﻿namespace TechChallenge.Domain.Interfaces;
+﻿using TechChallenge.Domain.Models.UserGame;
+
+namespace TechChallenge.Domain.Interfaces;
 
 public interface IUserGameService
 {

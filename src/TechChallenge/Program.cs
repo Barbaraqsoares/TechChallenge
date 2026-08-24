@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using Serilog;
 using System.Reflection;
 using TechChallenge.Configuration;
 using TechChallenge.Domain.Interfaces;
-using TechChallenge.HealthChecks;
 using TechChallenge.Infrastructure.Authentication;
 using TechChallenge.Infrastructure.Repository;
 using TechChallenge.Middleware;
@@ -16,9 +13,7 @@ try
 
     builder.Host.UseSerilogLogging();
 
-    var configuration = new ConfigurationBuilder()
-        .AddJsonFile("appsettings.json")
-        .Build();
+    var configuration = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 
     // JWT settings via configuration (appsettings.json / environment)
     var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -90,8 +85,7 @@ try
     // Executa em qualquer ambiente
     using (var scope = app.Services.CreateScope())
     {
-        var context = scope.ServiceProvider
-            .GetRequiredService<ApplicationDbContext>();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         await context.Database.MigrateAsync();
 
