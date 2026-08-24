@@ -8,7 +8,7 @@ public class UserGame : EntityBAse
     public int GameId { get; set; }
     public Game Game { get; set; } = null!;
 
-    public DateTime PurchasedAt { get; set; } = DateTime.UtcNow;
+    public DateTime PurchasedAt { get; set; } = DateTime.Now;
 }
 
 

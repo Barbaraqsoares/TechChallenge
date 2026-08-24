@@ -36,18 +36,20 @@ public class UserRepository : IUserRepository
         return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
     }
 
-    public Task<List<User>> GetAllAsync()
+    public async Task<List<User>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _context.Users.AsNoTracking().ToListAsync();
     }
 
-    public Task UpdateAsync(User user)
+    public async Task UpdateAsync(User user)
     {
-        throw new NotImplementedException();
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
     }
 
-    public Task DeleteAsync(User user)
+    public async Task DeleteAsync(User user)
     {
-        throw new NotImplementedException();
+        _context.Users.Remove(user);
+        await _context.SaveChangesAsync();
     }
 }

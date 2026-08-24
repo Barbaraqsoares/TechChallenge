@@ -66,28 +66,48 @@ public class UserService : IUserService
         return passwordIsValid ? user: null;
     }
 
-    public Task<IEnumerable<UserGameResponse>> GetAllAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        var users = await _userRepository.GetAllAsync();
+
+        return users.Select(user => new UserResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Login = user.Login,
+            Perfil = user.Perfil,
+            CreatedAt = user.CreatedAt
+        });
     }
 
-    public Task<UserGameResponse?> GetByIdAsync(int id)
+    public async Task<UserResponse?> GetByIdAsync(int id)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByIdAsync(id);
+
+        if (user == null)
+            return null;
+
+        return new UserResponse
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Login = user.Login,
+            Perfil = user.Perfil,
+            CreatedAt = user.CreatedAt
+        };
     }
 
-    public Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
-        throw new NotImplementedException();
-    }
+        var user = await _userRepository.GetByIdAsync(id);
 
-    Task<IEnumerable<UserResponse>> IUserService.GetAllAsync()
-    {
-        throw new NotImplementedException();
-    }
+        if (user == null)
+            return false;
 
-    Task<UserResponse?> IUserService.GetByIdAsync(int id)
-    {
-        throw new NotImplementedException();
+        await _userRepository.DeleteAsync(user);
+
+        return true;
     }
 }
