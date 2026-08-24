@@ -1,12 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Models.User;
-using TechChallenge.Domain.Services;
 
 namespace TechChallenge.Controllers;
 
@@ -14,33 +8,13 @@ namespace TechChallenge.Controllers;
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
 {
-    private readonly IConfiguration _configuration;
+    private readonly ITokenService _tokenService;
     private readonly IUserService _userService;
 
-    public AuthController(IConfiguration configuration, IUserService userService)
+    public AuthController(ITokenService tokenService, IUserService userService)
     {
-        _configuration = configuration;
+        _tokenService = tokenService;
         _userService = userService;
-    }
-
-    /// <summary>
-    /// Login
-    /// </summary>
-    /// <param name="login"></param>
-    /// <returns></returns>
-    [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] UsuarioLogin login)
-    {
-        var user = await _userService.AuthenticateAsync(login.Login, login.Password);
-
-        if (user == null)
-        {
-            return Unauthorized("Usuário ou senha inválidos");
-        }
-
-        var token = GerarToken(user.Login, user.Perfil.ToString());
-
-        return Ok(new { token });
     }
 
     /// <summary>
@@ -62,32 +36,25 @@ public class AuthController : ControllerBase
         );
     }
 
-    private string GerarToken(string username, string role)
+    /// <summary>
+    /// Login
+    /// </summary>
+    /// <param name="login"></param>
+    /// <returns></returns>
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] UsuarioLogin login)
     {
-        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Secret"]);
-        var tokenHandler = new JwtSecurityTokenHandler();
+        var user = await _userService.AuthenticateAsync(login.Login, login.Password);
 
-        var claims = new[]
+        if (user == null)
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, role) // Aqui definimos User ou Admin
-        };
+            return Unauthorized("Usuário ou senha inválidos");
+        }
 
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddHours(1),
-            Issuer = "suaempresa.com",
-            Audience = "suaempresa.com",
-            SigningCredentials = new SigningCredentials(
-                new SymmetricSecurityKey(key),
-                SecurityAlgorithms.HmacSha256Signature
-            )
-        };
+        var token = _tokenService.GenerateToken(user);
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
-    }
+        return Ok(token);
+    } 
 }
 
 public class UsuarioLogin

@@ -15,6 +15,7 @@ namespace TechChallenge.Infrastructure.Migrations
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
+#pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.30")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
@@ -58,17 +59,17 @@ namespace TechChallenge.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("UpdateAt")
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Games");
+                    b.ToTable("Games", (string)null);
                 });
 
             modelBuilder.Entity("TechChallenge.Domain.Entity.Promotion", b =>
@@ -96,7 +97,7 @@ namespace TechChallenge.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -106,50 +107,84 @@ namespace TechChallenge.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Promotions");
+                    b.ToTable("Promotions", (string)null);
                 });
 
             modelBuilder.Entity("TechChallenge.Domain.Entity.User", b =>
                 {
-                b.Property<int>("Id")
-                    .ValueGeneratedOnAdd()
-                    .HasColumnType("int");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
 
-                SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                b.Property<DateTime>("CreatedAt")
-                    .HasColumnType("DATETIME");
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("DATETIME");
 
-                b.Property<string>("Email")
-                    .IsRequired()
-                    .HasMaxLength(100)
-                    .HasColumnType("varchar(50)");
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
-                b.Property<string>("Login")
-                    .IsRequired()
-                    .HasMaxLength(50)
-                    .HasColumnType("varchar(50)");
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
 
-                b.Property<string>("Name")
-                    .IsRequired()
-                    .HasMaxLength(100)
-                    .HasColumnType("varchar(50)");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
-                b.Property<string>("Password")
-                    .IsRequired()
-                    .HasMaxLength(256)
-                    .HasColumnType("varchar(256)");
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("Password");
 
-                b.Property<int>("Perfil")
-                    .HasColumnType("int");
+                    b.Property<int>("Perfil")
+                        .HasColumnType("int");
 
-                b.Property<DateTime>("UpdatedAt")
-                    .HasColumnType("DATETIME");
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("DATETIME");
 
-                b.HasKey("Id");
+                    b.HasKey("Id");
 
-                b.ToTable("Users", (string)null);
-            });
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("TechChallenge.Domain.Entity.UserGame", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("UserId", "GameId")
+                        .IsUnique();
+
+                    b.ToTable("UserGames");
+                });
 
             modelBuilder.Entity("GamePromotion", b =>
                 {
@@ -165,6 +200,26 @@ namespace TechChallenge.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
+
+            modelBuilder.Entity("TechChallenge.Domain.Entity.UserGame", b =>
+                {
+                    b.HasOne("TechChallenge.Domain.Entity.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("TechChallenge.Domain.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Game");
+
+                    b.Navigation("User");
+                });
+#pragma warning restore 612, 618
         }
     }
 }

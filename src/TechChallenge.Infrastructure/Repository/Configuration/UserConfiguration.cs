@@ -14,11 +14,7 @@ namespace TechChallenge.Infrastructure.Repository.Configuration
             builder.Property(t => t.Name).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
             builder.Property(t => t.Email).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
             builder.Property(t => t.Login).HasMaxLength(50).HasColumnType("varchar(50)");
-            builder.Property(t => t.Password)
-                .IsRequired()
-                .HasMaxLength(50)
-                .HasColumnType("varchar(50)")
-                .HasColumnName("Password");
+            builder.Property(t => t.Password).IsRequired().HasMaxLength(50).HasColumnType("varchar(100)").HasColumnName("Password");
             builder.Property(t => t.Perfil).IsRequired();
             builder.Property(t => t.CreatedAt).HasColumnType("DATETIME");
             builder.Property(t => t.UpdatedAt).HasColumnType("DATETIME");

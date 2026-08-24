@@ -17,7 +17,7 @@ namespace TechChallenge.Infrastructure.Repository.Configuration
             builder.Property(p => p.IsActive).HasColumnType("bit");
             builder.Property(p => p.IsMultiplayer).HasColumnType("bit");
             builder.Property(p => p.CreatedAt).HasColumnType("datetime2");
-            builder.Property(p => p.UpdateAt).HasColumnType("datetime2");
+            builder.Property(p => p.UpdatedAt).HasColumnType("datetime2");
          
 
         }

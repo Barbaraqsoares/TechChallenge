@@ -52,10 +52,9 @@ public class GameController : ControllerBase
 
 
     /// <summary>
-    /// Cria um novo game.
+    /// Cria um novo game (apenas para administradores).
     /// </summary>
     /// <returns></returns>
-    [Authorize(Roles = "Admin")]
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] Game game)
@@ -69,11 +68,10 @@ public class GameController : ControllerBase
         );
     }
     /// <summary>
-    /// Atualiza um game existente pelo ID.
+    /// Atualiza um game existente pelo ID (apenas para administradores).
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [Authorize(Roles = "Admin")]
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateGame(
@@ -93,11 +91,10 @@ public class GameController : ControllerBase
     }
 
     /// <summary>
-    /// Deleta um game existente pelo ID.
+    /// Deleta um game existente pelo ID (apenas para administradores).
     /// </summary>
     /// <param name="id"></param>
     /// <returns></returns>
-    [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteGame(int id)

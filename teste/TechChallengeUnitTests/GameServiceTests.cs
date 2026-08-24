@@ -142,7 +142,7 @@ public class GameServiceTests
         );
 
         Assert.InRange(
-            result.UpdateAt,
+            result.UpdatedAt,
             beforeCreation,
             afterCreation
         );
@@ -185,7 +185,7 @@ public class GameServiceTests
             IsActive = true,
             IsMultiplayer = false,
             CreatedAt = createdAt,
-            UpdateAt = createdAt
+            UpdatedAt = createdAt
         };
 
         repositoryMock

@@ -11,14 +11,17 @@ public class User : EntityBAse
     public string Password { get; set; }
     public PerfilEnum Perfil { get; set; }
 
-    public User(string name, string email, string login, string passaword, PerfilEnum perfil)
+    protected User()
+    {
+    }
+
+    public User(string name, string email, string login, string password, PerfilEnum perfil)
     {
         Name = name.Trim();        
         ValidateEmail(email);
         Email = email.Trim();
-        Login = login;     
-        ValidatePassword(passaword);
-        Password = passaword;
+        Login = login;
+        SetPassword(password);
         Perfil = perfil;
     }
 
@@ -38,7 +41,7 @@ public class User : EntityBAse
     protected void SetPassword(string password)
     {
         ValidatePassword(password);
-        Password = password;
+        Password = BCrypt.Net.BCrypt.HashPassword(password);
     }
     private static void ValidatePassword(string password)
     {

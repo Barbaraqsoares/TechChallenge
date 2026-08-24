@@ -1,107 +1,64 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 using System.Reflection;
-using System.Text;
-using System.Security.Cryptography;
-using TechChallenge.DependencyInjection;
+using TechChallenge.Configuration;
+using TechChallenge.Domain.Interfaces;
+using TechChallenge.HealthChecks;
+using TechChallenge.Infrastructure.Authentication;
 using TechChallenge.Infrastructure.Repository;
+using TechChallenge.Middleware;
 
-var builder = WebApplication.CreateBuilder(args);
-
-var configuration = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
-
-// JWT settings via configuration (appsettings.json / environment)
-var jwtSection = builder.Configuration.GetSection("Jwt");
-builder.Services.Configure<JwtSettings>(jwtSection);
-var jwtSettings = jwtSection.Get<JwtSettings>() ?? new TechChallenge.DependencyInjection.JwtSettings();
-
-// Configuração da autenticação JWT usando DI/config
-builder.Services.AddAuthentication(options =>
+try
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = builder.Environment.IsDevelopment() ? false : true;
-    options.SaveToken = true;
+    var builder = WebApplication.CreateBuilder(args);
 
-    // Preferir secret em Base64 (32+ bytes). Se não for Base64 válido ou for curto, aplica fallback seguro.
-    byte[] keyBytes;
-    if (!string.IsNullOrWhiteSpace(jwtSettings.Secret))
+    builder.Host.UseSerilogLogging();
+
+    var configuration = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .Build();
+
+    // JWT settings via configuration (appsettings.json / environment)
+    var jwtSection = builder.Configuration.GetSection("Jwt");
+    builder.Services.Configure<JwtSettings>(jwtSection);
+    var jwtSettings = jwtSection.Get<JwtSettings>() ?? new TechChallenge.Infrastructure.Authentication.JwtSettings();
+
+    builder.Services.AddJwtAuthentication(builder.Configuration);
+
+    builder.Services.AddScoped<ITokenService, TokenService>();
+
+    // Add services to the container.
+
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
     {
-        try
+        c.SwaggerDoc("v1", new OpenApiInfo
         {
-            keyBytes = Convert.FromBase64String(jwtSettings.Secret);
-        }
-        catch
+            Title = "Tech Challenge",
+            Version = "v1",
+            Description = "Tech Challenge",
+            Contact = new OpenApiContact
+            {
+                Name = "Equipe Desafio",
+                Email = "contato@desafio.com"
+            }
+        });
+
+        // Configuração de segurança JWT
+        c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
         {
-            // Secret não é Base64 válido — derive 32 bytes via SHA256 da string para garantir tamanho mínimo
-            using var sha = SHA256.Create();
-            keyBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(jwtSettings.Secret));
-        }
+            Description = "Insira o token JWT no campo abaixo usando o esquema: Bearer {seu token}",
+            Name = "Authorization",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
 
-        if (keyBytes.Length < 32)
+        c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
         {
-            using var sha = SHA256.Create();
-            keyBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(jwtSettings.Secret ?? string.Empty));
-        }
-    }
-    else
-    {
-        // Secret ausente: gerar chave aleatória temporária (não recomendado para produção)
-        keyBytes = new byte[32];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(keyBytes);
-    }
-
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes)
-    };
-});
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Tech Challenge",
-        Version = "v1",
-        Description = "Tech Challenge",
-        Contact = new OpenApiContact
-        {
-            Name = "Equipe Desafio",
-            Email = "contato@desafio.com"
-        }
-    });
-
-    // Configuração de segurança JWT
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Description = "Insira o token JWT no campo abaixo usando o esquema: Bearer {seu token}",
-        Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
         {
             new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
@@ -113,43 +70,69 @@ builder.Services.AddSwaggerGen(c =>
             },
             new string[] {}
         }
+        });
+
+        // Comentários XML (se habilitado no .csproj)
+        var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
+        }
     });
 
-    // Comentários XML (se habilitado no .csproj)
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
+    
+    // Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
+    builder.Services.AddInfrastructure(builder.Configuration);
+
+    var app = builder.Build();
+    app.UseRequestLogging();
+
+    // Executa em qualquer ambiente
+    using (var scope = app.Services.CreateScope())
     {
-        c.IncludeXmlComments(xmlPath);
+        var context = scope.ServiceProvider
+            .GetRequiredService<ApplicationDbContext>();
+
+        await context.Database.MigrateAsync();
+
+        await DbInitializer.InitializeAsync(context);
     }
-});
 
+    
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseRequestLogging();
 
-// Registrar serviços de infraestrutura (DbContext, repositórios, etc.)
-builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    // Configure the HTTP request pipeline.
+
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "TechChallange API v1");
+        c.RoutePrefix = string.Empty; // abre direto na raiz
+    });
+
+    app.UseHttpsRedirection();
+
+    // Ativar autenticação e autorização
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.Run();
+}
+
+catch (Exception exception) when (exception is not HostAbortedException)
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("SqlConnection"));
-}, ServiceLifetime.Scoped);
+    Log.Fatal(exception, "A aplicação não pôde ser iniciada");
 
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+    return 1;
+}
+finally
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "TechChallange API v1");
-    c.RoutePrefix = string.Empty; // abre direto na raiz
-});
+    Log.CloseAndFlush();
+}
 
-app.UseHttpsRedirection();
-
-// Ativar autenticação e autorização
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+return 0;

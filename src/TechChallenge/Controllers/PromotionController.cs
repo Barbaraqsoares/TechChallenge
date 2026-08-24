@@ -15,7 +15,10 @@ public class PromotionsController : ControllerBase
     {
         _promotionService = promotionService;
     }
-
+    /// <summary>
+    /// Consulta promoções disponíveis
+    /// </summary>
+    /// <returns></returns>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -25,6 +28,11 @@ public class PromotionsController : ControllerBase
         return Ok(promotions);
     }
 
+    /// <summary>
+    /// Consulta uma promoção específica pelo ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -41,6 +49,11 @@ public class PromotionsController : ControllerBase
         return Ok(promotion);
     }
 
+    /// <summary>
+    /// Cadastra uma nova promoção (apenas para administradores)
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Create(
@@ -71,6 +84,11 @@ public class PromotionsController : ControllerBase
         );
     }
 
+    /// <summary>
+    /// Deleta uma promoção pelo ID (apenas para administradores)
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)

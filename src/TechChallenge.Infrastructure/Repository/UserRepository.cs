@@ -31,4 +31,23 @@ public class UserRepository : IUserRepository
 
         return user;
     }
+    public async Task<User?> GetByIdAsync(int id)
+    {
+        return await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+    }
+
+    public Task<List<User>> GetAllAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task UpdateAsync(User user)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task DeleteAsync(User user)
+    {
+        throw new NotImplementedException();
+    }
 }

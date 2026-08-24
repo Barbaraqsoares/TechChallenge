@@ -27,7 +27,7 @@ public class GameService : IGameService
         ValidateGame(game);
 
         game.CreatedAt = DateTime.Now;
-        game.UpdateAt = DateTime.Now;
+        game.UpdatedAt = DateTime.Now;
         game.IsActive = true;
 
         return await _gameRepository.AddAsync(game);
@@ -47,7 +47,7 @@ public class GameService : IGameService
         existingGame.Price = game.Price;
         existingGame.IsMultiplayer = game.IsMultiplayer;
         existingGame.IsActive = game.IsActive;
-        existingGame.UpdateAt = DateTime.Now;
+        existingGame.UpdatedAt = DateTime.Now;
 
         await _gameRepository.UpdateAsync(existingGame);
 

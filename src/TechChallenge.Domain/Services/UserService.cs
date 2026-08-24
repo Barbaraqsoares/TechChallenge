@@ -13,9 +13,7 @@ public class UserService : IUserService
         _userRepository = userRepository;
     }
 
-    public async Task<UserResponse> CreateAsync(
-        RegisterUserRequest request
-    )
+    public async Task<UserResponse> CreateAsync(RegisterUserRequest request)
     {
         var existingLogin =
             await _userRepository.GetByLoginAsync(request.Login);
@@ -33,6 +31,7 @@ public class UserService : IUserService
             throw new InvalidOperationException("E-mail já cadastrado.");
         }
 
+        
         var user = new User(
             request.Name,
             request.Email,
@@ -62,7 +61,33 @@ public class UserService : IUserService
         if (user == null)
             return null;
 
-        // Comparação simples (texto puro)
-        return user.Password == password ? user : null;
+        var passwordIsValid =BCrypt.Net.BCrypt.Verify(password, user.Password);
+
+        return passwordIsValid ? user: null;
+    }
+
+    public Task<IEnumerable<UserGameResponse>> GetAllAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<UserGameResponse?> GetByIdAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> DeleteAsync(int id)
+    {
+        throw new NotImplementedException();
+    }
+
+    Task<IEnumerable<UserResponse>> IUserService.GetAllAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    Task<UserResponse?> IUserService.GetByIdAsync(int id)
+    {
+        throw new NotImplementedException();
     }
 }
