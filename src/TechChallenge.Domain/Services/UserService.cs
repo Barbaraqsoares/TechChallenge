@@ -1,4 +1,5 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Models.User;
 
@@ -18,12 +19,12 @@ public class UserService : IUserService
         var existingLogin = await _userRepository.GetByLoginAsync(request.Login);
 
         if (existingLogin != null)
-            throw new InvalidOperationException("Login já cadastrado.");
+            throw new ConflictException("Login já cadastrado.");
 
         var existingEmail = await _userRepository.GetByEmailAsync(request.Email);
 
         if (existingEmail != null)
-            throw new InvalidOperationException("E-mail já cadastrado.");
+            throw new ConflictException("E-mail já cadastrado.");
 
         var user = new User(
             request.Name,
@@ -46,16 +47,16 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<User?> AuthenticateAsync(string login, string password)
+    public async Task<User> AuthenticateAsync(string login, string password)
     {
         var user = await _userRepository.GetByLoginAsync(login);
 
-        if (user == null)
-            return null;
+        // A mesma mensagem para login inexistente e senha errada: dizer qual dos dois
+        // falhou entregaria a um atacante a confirmação de que o login existe.
+        if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.Password))
+            throw new UnauthorizedAccessException("Usuário ou senha inválidos.");
 
-        var passwordIsValid =BCrypt.Net.BCrypt.Verify(password, user.Password);
-
-        return passwordIsValid ? user: null;
+        return user;
     }
 
     public async Task<IEnumerable<UserResponse>> GetAllAsync()
@@ -73,12 +74,10 @@ public class UserService : IUserService
         });
     }
 
-    public async Task<UserResponse?> GetByIdAsync(int id)
+    public async Task<UserResponse> GetByIdAsync(int id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
-
-        if (user == null)
-            return null;
+        var user = await _userRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Usuário {id} não encontrado.");
 
         return new UserResponse
         {
@@ -91,15 +90,11 @@ public class UserService : IUserService
         };
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        var user = await _userRepository.GetByIdAsync(id);
-
-        if (user == null)
-            return false;
+        var user = await _userRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Usuário {id} não encontrado.");
 
         await _userRepository.DeleteAsync(user);
-
-        return true;
     }
 }

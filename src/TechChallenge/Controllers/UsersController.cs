@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.User;
 
 namespace TechChallenge.Controllers;
 
@@ -32,11 +33,11 @@ public class UsersController : ControllerBase
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var user = await _userService.GetByIdAsync(id);
-
-        return user == null ? NotFound() : Ok(user);
+        return Ok(await _userService.GetByIdAsync(id));
     }
 
     /// <summary>
@@ -45,10 +46,12 @@ public class UsersController : ControllerBase
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _userService.DeleteAsync(id);
+        await _userService.DeleteAsync(id);
 
-        return deleted ? NoContent() : NotFound();
+        return NoContent();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
 
 namespace TechChallenge.Domain.Services;
@@ -17,9 +18,10 @@ public class GameService : IGameService
         return await _gameRepository.GetAllAsync();
     }
 
-    public async Task<Game?> GetByIdAsync(int id)
+    public async Task<Game> GetByIdAsync(int id)
     {
-        return await _gameRepository.GetByIdAsync(id);
+        return await _gameRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Jogo {id} não encontrado.");
     }
 
     public async Task<Game> CreateAsync(Game game)
@@ -33,12 +35,10 @@ public class GameService : IGameService
         return await _gameRepository.AddAsync(game);
     }
 
-    public async Task<Game?> UpdateAsync(int id, Game game)
+    public async Task<Game> UpdateAsync(int id, Game game)
     {
-        var existingGame = await _gameRepository.GetByIdAsync(id);
-
-        if (existingGame == null)
-            return null;
+        var existingGame = await _gameRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Jogo {id} não encontrado.");
 
         ValidateGame(game);
 
@@ -54,24 +54,20 @@ public class GameService : IGameService
         return existingGame;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        var game = await _gameRepository.GetByIdAsync(id);
-
-        if (game == null)
-            return false;
+        var game = await _gameRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Jogo {id} não encontrado.");
 
         await _gameRepository.DeleteAsync(game);
-
-        return true;
     }
 
     private static void ValidateGame(Game game)
     {
         if (string.IsNullOrWhiteSpace(game.Name))
-            throw new ArgumentException("O nome do jogo é obrigatório.");
+            throw new DomainException("O nome do jogo é obrigatório.");
 
         if (game.Price < 0)
-            throw new ArgumentException("O preço do jogo não pode ser negativo.");
+            throw new DomainException("O preço do jogo não pode ser negativo.");
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Models.Promotion;
 
@@ -33,14 +34,11 @@ public class PromotionsController : ControllerBase
     /// <param name="id"></param>
     /// <returns></returns>
     [HttpGet("{id}")]
+    [ProducesResponseType(typeof(PromotionResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetById(int id)
     {
-        var promotion = await _promotionService.GetByIdAsync(id);
-
-        if (promotion == null)
-            return NotFound("Promoção não encontrada.");
-
-        return Ok(promotion);
+        return Ok(await _promotionService.GetByIdAsync(id));
     }
 
     /// <summary>
@@ -50,12 +48,12 @@ public class PromotionsController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [ProducesResponseType(typeof(PromotionResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Create([FromBody] CreatePromotionRequest request)
     {
-        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
-
-        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var adminUserId))
-            return Unauthorized();
+        var adminUserId = GetAuthenticatedUserId();
 
         var promotion = await _promotionService.CreateAsync(request, adminUserId);
 
@@ -69,13 +67,26 @@ public class PromotionsController : ControllerBase
     /// <returns></returns>
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _promotionService.DeleteAsync(id);
-
-        if (!deleted)
-            return NotFound("Promoção não encontrada.");
+        await _promotionService.DeleteAsync(id);
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Extrai o id do usuário autenticado do token. A claim é obrigatória: sem ela
+    /// não há como registrar quem criou a promoção.
+    /// </summary>
+    private int GetAuthenticatedUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out var userId))
+            throw new UnauthorizedAccessException("Usuário inválido.");
+
+        return userId;
     }
 }

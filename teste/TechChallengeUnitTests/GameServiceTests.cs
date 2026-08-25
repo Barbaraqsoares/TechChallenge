@@ -1,5 +1,6 @@
 ﻿using Moq;
 using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Services;
 
@@ -55,7 +56,7 @@ public class GameServiceTests
         };
 
         // Act + Assert
-        await Assert.ThrowsAsync<ArgumentException>(
+        await Assert.ThrowsAsync<DomainException>(
             async () => await service.CreateAsync(game)
         );
     }
@@ -77,7 +78,7 @@ public class GameServiceTests
         };
 
         // Act + Assert
-        await Assert.ThrowsAsync<ArgumentException>(
+        await Assert.ThrowsAsync<DomainException>(
             async () => await service.CreateAsync(game)
         );
     }
@@ -141,15 +142,19 @@ public class GameServiceTests
             afterCreation
         );
 
+        // UpdatedAt é anulável em EntityBase, então precisa ser desembrulhado antes
+        // de comparar — o próprio Assert.NotNull já protege contra um nulo silencioso.
+        Assert.NotNull(result.UpdatedAt);
+
         Assert.InRange(
-            result.UpdatedAt,
+            result.UpdatedAt.Value,
             beforeCreation,
             afterCreation
         );
     }
 
     [Fact]
-    public async Task ShouldReturnNull_WhenGameDoesNotExist()
+    public async Task ShouldThrowNotFoundException_WhenGameDoesNotExist()
     {
         // Arrange
         var repositoryMock = new Mock<IGameRepository>();
@@ -161,11 +166,10 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        // Act
-        var result = await service.GetByIdAsync(999);
-
-        // Assert
-        Assert.Null(result);
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            async () => await service.GetByIdAsync(999)
+        );
     }
 
     [Fact]
@@ -245,7 +249,7 @@ public class GameServiceTests
     }
 
     [Fact]
-    public async Task ShouldReturnNull_WhenUpdatingNonExistingGame()
+    public async Task ShouldThrowNotFoundException_WhenUpdatingNonExistingGame()
     {
         // Arrange
         var repositoryMock = new Mock<IGameRepository>();
@@ -263,14 +267,10 @@ public class GameServiceTests
             Price = 100
         };
 
-        // Act
-        var result = await service.UpdateAsync(
-            999,
-            game
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            async () => await service.UpdateAsync(999, game)
         );
-
-        // Assert
-        Assert.Null(result);
 
         repositoryMock.Verify(
             repository =>
@@ -302,11 +302,9 @@ public class GameServiceTests
         var service = new GameService(repositoryMock.Object);
 
         // Act
-        var result = await service.DeleteAsync(1);
+        await service.DeleteAsync(1);
 
         // Assert
-        Assert.True(result);
-
         repositoryMock.Verify(
             repository =>
                 repository.DeleteAsync(game),
@@ -315,7 +313,7 @@ public class GameServiceTests
     }
 
     [Fact]
-    public async Task ShouldReturnFalse_WhenDeletingNonExistingGame()
+    public async Task ShouldThrowNotFoundException_WhenDeletingNonExistingGame()
     {
         // Arrange
         var repositoryMock = new Mock<IGameRepository>();
@@ -327,11 +325,10 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        // Act
-        var result = await service.DeleteAsync(999);
-
-        // Assert
-        Assert.False(result);
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            async () => await service.DeleteAsync(999)
+        );
 
         repositoryMock.Verify(
             repository =>
@@ -340,5 +337,81 @@ public class GameServiceTests
                 ),
             Times.Never
         );
+    }
+
+    [Fact]
+    public async Task ShouldReturnGame_WhenGameExists()
+    {
+        // Arrange
+        var repositoryMock = new Mock<IGameRepository>();
+
+        var game = new Game
+        {
+            Id = 1,
+            Name = "Minecraft",
+            Description = "Sandbox",
+            Price = 99.90m,
+            IsActive = true
+        };
+
+        repositoryMock
+            .Setup(repository =>
+                repository.GetByIdAsync(1))
+            .ReturnsAsync(game);
+
+        var service = new GameService(repositoryMock.Object);
+
+        // Act
+        var result = await service.GetByIdAsync(1);
+
+        // Assert
+        Assert.Equal(1, result.Id);
+        Assert.Equal("Minecraft", result.Name);
+    }
+
+    [Fact]
+    public async Task ShouldReturnAllGames()
+    {
+        // Arrange
+        var repositoryMock = new Mock<IGameRepository>();
+
+        var games = new List<Game>
+        {
+            new() { Id = 1, Name = "Minecraft", Price = 99.90m },
+            new() { Id = 2, Name = "Stardew Valley", Price = 34.90m }
+        };
+
+        repositoryMock
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync(games);
+
+        var service = new GameService(repositoryMock.Object);
+
+        // Act
+        var result = await service.GetAllAsync();
+
+        // Assert
+        Assert.Equal(2, result.Count());
+        Assert.Contains(result, game => game.Name == "Stardew Valley");
+    }
+
+    [Fact]
+    public async Task ShouldReturnEmptyList_WhenThereAreNoGames()
+    {
+        // Arrange
+        var repositoryMock = new Mock<IGameRepository>();
+
+        repositoryMock
+            .Setup(repository => repository.GetAllAsync())
+            .ReturnsAsync(new List<Game>());
+
+        var service = new GameService(repositoryMock.Object);
+
+        // Act
+        var result = await service.GetAllAsync();
+
+        // Assert
+        // Lista vazia é resposta válida — não deve virar "não encontrado".
+        Assert.Empty(result);
     }
 }

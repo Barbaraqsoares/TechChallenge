@@ -5,25 +5,35 @@ using TechChallenge.Infrastructure.Repository;
 
 namespace TechChallenge.Extensions;
 
+/// <summary>
+/// Prepara o banco de dados antes de a aplicação começar a atender requisições.
+/// </summary>
 public static class DatabaseExtensions
 {
+    /// <summary>
+    /// Aplica as migrations pendentes e garante o administrador inicial.
+    ///
+    /// Se qualquer uma das duas etapas falhar, a exceção sobe e derruba a
+    /// inicialização de propósito: uma aplicação que atende requisições com o banco
+    /// ausente ou desatualizado responderia erro 500 em todos os endpoints,
+    /// enquanto o container aparentaria estar saudável.
+    /// </summary>
     public static async Task MigrateAndSeedAsync(this WebApplication app)
     {
         using var scope = app.Services.CreateScope();
-        var loggerFactory = scope.ServiceProvider.GetService<ILoggerFactory>();
-        var logger = loggerFactory?.CreateLogger("DatabaseExtensions");
 
-        try
-        {
-            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logger = scope.ServiceProvider
+            .GetRequiredService<ILoggerFactory>()
+            .CreateLogger("DatabaseExtensions");
 
-            await context.Database.MigrateAsync();
-            await DbInitializer.InitializeAsync(context);
-        }
-        catch (Exception ex)
-        {
-            // Loga o erro e permite que a aplicação continue inicializando
-            logger?.LogError(ex, "Falha ao aplicar migrations/seed no banco. Verifique a connection string e o servidor de banco.");
-        }
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        logger.LogInformation("Aplicando migrations pendentes...");
+
+        await context.Database.MigrateAsync();
+
+        await DbInitializer.InitializeAsync(context);
+
+        logger.LogInformation("Banco de dados pronto.");
     }
 }

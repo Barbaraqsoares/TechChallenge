@@ -6,6 +6,14 @@ using TechChallenge.Infrastructure.Authentication;
 using TechChallenge.Middleware;
 using TechChallenge.Extensions;
 
+// Logger provisório, ativo apenas até o host subir com a configuração definitiva.
+// Sem ele o Serilog usa um logger silencioso nesse intervalo, e uma falha antes do
+// builder.Build() — connection string inválida, porta ocupada, migration quebrada —
+// não seria registrada em lugar nenhum: o Log.Fatal lá embaixo escreveria no vazio.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);

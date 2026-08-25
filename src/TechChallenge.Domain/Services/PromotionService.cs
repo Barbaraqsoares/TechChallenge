@@ -1,4 +1,5 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Models.Promotion;
 
@@ -17,16 +18,16 @@ public class PromotionService : IPromotionService
     private static void ValidatePromotion(CreatePromotionRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Name))
-            throw new ArgumentException("O nome da promoção é obrigatório.");
+            throw new DomainException("O nome da promoção é obrigatório.");
 
         if (request.Discount <= 0 || request.Discount > 100)
-            throw new ArgumentException("Desconto precisa ser maior que 0 e até 100.");
+            throw new DomainException("Desconto precisa ser maior que 0 e até 100.");
 
         if (request.StartDate >= request.EndDate)
-            throw new ArgumentException("A data de inicio precisa ser menor que a data fim.");
+            throw new DomainException("A data de inicio precisa ser menor que a data fim.");
 
         if (request.GameIds.Count == 0)
-            throw new ArgumentException("Ao menos 1 game precisa ser selecionado.");
+            throw new DomainException("Ao menos 1 game precisa ser selecionado.");
     }
 
     public async Task<PromotionResponse> CreateAsync(CreatePromotionRequest request, int adminUserId)
@@ -36,7 +37,7 @@ public class PromotionService : IPromotionService
         var games = await _gameRepository.GetByIdsAsync(request.GameIds);
 
         if (games.Count != request.GameIds.Distinct().Count())
-            throw new ArgumentException("Um ou mais games não foram encontrados.");
+            throw new DomainException("Um ou mais games não foram encontrados.");
 
         var promotion = new Promotion
         {
@@ -80,25 +81,19 @@ public class PromotionService : IPromotionService
         return promotions.Select(MapToResponse);
     }
 
-    public async Task<PromotionResponse?> GetByIdAsync(int id)
+    public async Task<PromotionResponse> GetByIdAsync(int id)
     {
-        var promotion = await _promotionRepository.GetByIdAsync(id);
-
-        if (promotion == null)
-            return null;
+        var promotion = await _promotionRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Promoção {id} não encontrada.");
 
         return MapToResponse(promotion);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
-        var promotion = await _promotionRepository.GetByIdAsync(id);
-
-        if (promotion == null)
-            return false;
+        var promotion = await _promotionRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Promoção {id} não encontrada.");
 
         await _promotionRepository.DeleteAsync(promotion);
-
-        return true;
     }
 }

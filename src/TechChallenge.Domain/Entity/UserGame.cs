@@ -1,6 +1,6 @@
 ﻿namespace TechChallenge.Domain.Entity;
 
-public class UserGame : EntityBAse
+public class UserGame : EntityBase
 {
     public int UserId { get; set; }
     public User User { get; set; } = null!;

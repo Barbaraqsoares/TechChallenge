@@ -38,7 +38,7 @@ public class UserGameService : IUserGameService
         var existingUserGame = await _userGameRepository.GetByUserAndGameAsync( userId, gameId);
 
         if (existingUserGame != null)
-            throw new InvalidOperationException("O jogo já está na biblioteca do usuário.");
+            throw new ConflictException("O jogo já está na biblioteca do usuário.");
 
         var userGame = new UserGame
         {
@@ -74,15 +74,5 @@ public class UserGameService : IUserGameService
             Price = userGame.Game.Price,
             PurchasedAt = userGame.PurchasedAt
         }).ToList();
-    }
-
-    Task<UserGameResponse> IUserGameService.AddGameToLibraryAsync(int userId, int gameId)
-    {
-        throw new NotImplementedException();
-    }
-
-    Task<List<UserGameResponse>> IUserGameService.GetUserLibraryAsync(int userId)
-    {
-        throw new NotImplementedException();
     }
 }

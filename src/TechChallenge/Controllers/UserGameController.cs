@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.UserGame;
 
 namespace TechChallenge.Api.Controllers;
 
@@ -23,6 +24,10 @@ public class UserGameController : ControllerBase
     /// do usuário autenticado.
     /// </summary>
     [HttpPost("{gameId}")]
+    [ProducesResponseType(typeof(UserGameResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AddGameToLibrary(int gameId)
     {
         var userId = GetAuthenticatedUserId();
@@ -36,6 +41,9 @@ public class UserGameController : ControllerBase
     /// Retorna a biblioteca do usuário autenticado.
     /// </summary>
     [HttpGet]
+    [ProducesResponseType(typeof(List<UserGameResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserLibrary()
     {
         var userId = GetAuthenticatedUserId();

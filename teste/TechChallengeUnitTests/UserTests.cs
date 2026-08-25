@@ -1,4 +1,5 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 
 namespace TechChallengeUnitTests;
 
@@ -27,7 +28,7 @@ public class UserTests
     [Fact]
     public void ShouldThrowException_WhenPasswordHasLessThanEightCharacters()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             new User(
                 "Gabriela",
@@ -42,7 +43,7 @@ public class UserTests
     [Fact]
     public void ShouldThrowException_WhenPasswordDoesNotContainNumber()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             new User(
                 "Gabriela",
@@ -57,7 +58,7 @@ public class UserTests
     [Fact]
     public void ShouldThrowException_WhenPasswordDoesNotContainLetter()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             new User(
                 "Gabriela",
@@ -72,7 +73,7 @@ public class UserTests
     [Fact]
     public void ShouldThrowException_WhenPasswordDoesNotContainSpecialCharacter()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             new User(
                 "Gabriela",
@@ -87,7 +88,7 @@ public class UserTests
     [Fact]
     public void ShouldThrowException_WhenEmailIsInvalid()
     {
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             new User(
                 "Gabriela",
@@ -137,7 +138,7 @@ public class UserTests
         );
 
         // Act + Assert
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             user.Update(
                 "Gabriela",
@@ -161,7 +162,7 @@ public class UserTests
         );
 
         // Act + Assert
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<DomainException>(() =>
         {
             user.Update(
                 "Gabriela",

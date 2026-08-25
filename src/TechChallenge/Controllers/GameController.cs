@@ -36,14 +36,11 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Client")]
+    [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetGameById(int id)
     {
-        var game = await _gameService.GetByIdAsync(id);
-
-        if (game == null)
-            return NotFound("Jogo não encontrado.");
-
-        return Ok(game);
+        return Ok(await _gameService.GetByIdAsync(id));
     }
 
 
@@ -67,14 +64,12 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateGame(int id, [FromBody] Game game)
     {
-        var updatedGame = await _gameService.UpdateAsync(id, game);
-
-        if (updatedGame == null)
-            return NotFound("Jogo não encontrado.");
-
-        return Ok(updatedGame);
+        return Ok(await _gameService.UpdateAsync(id, game));
     }
 
     /// <summary>
@@ -84,12 +79,11 @@ public class GameController : ControllerBase
     /// <returns></returns>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteGame(int id)
     {
-        var deleted = await _gameService.DeleteAsync(id);
-
-        if (!deleted)
-            return NotFound("Jogo não encontrado.");
+        await _gameService.DeleteAsync(id);
 
         return NoContent();
     }

@@ -1,10 +1,16 @@
-﻿using TechChallenge.Domain.Models.Promotion;
+﻿using TechChallenge.Domain.Exceptions;
+using TechChallenge.Domain.Models.Promotion;
 
 namespace TechChallenge.Domain.Interfaces;
 public interface IPromotionService
 {
     Task<IEnumerable<PromotionResponse>> GetAllAsync();
-    Task<PromotionResponse?> GetByIdAsync(int id);
+
+    /// <summary>Lança <see cref="NotFoundException"/> quando a promoção não existe.</summary>
+    Task<PromotionResponse> GetByIdAsync(int id);
+
     Task<PromotionResponse> CreateAsync(CreatePromotionRequest request, int adminUserId);
-    Task<bool> DeleteAsync(int id);
+
+    /// <summary>Lança <see cref="NotFoundException"/> quando a promoção não existe.</summary>
+    Task DeleteAsync(int id);
 }

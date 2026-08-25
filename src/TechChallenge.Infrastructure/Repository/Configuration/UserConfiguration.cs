@@ -14,7 +14,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(t => t.Name).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
         builder.Property(t => t.Email).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)");
         builder.Property(t => t.Login).HasMaxLength(50).HasColumnType("varchar(50)");
-        builder.Property(t => t.Password).IsRequired().HasMaxLength(50).HasColumnType("varchar(100)").HasColumnName("Password");
+        // O hash BCrypt tem 60 caracteres fixos. O HasMaxLength precisa acompanhar o
+        // varchar(100) da coluna: se ficar menor que 60, o dia em que o HasColumnType
+        // sair daqui o EF passa a truncar o hash na gravação — e o login de todos
+        // quebra sem erro nenhum aparecer.
+        builder.Property(t => t.Password).IsRequired().HasMaxLength(100).HasColumnType("varchar(100)").HasColumnName("Password");
         builder.Property(t => t.Perfil).IsRequired();
         builder.Property(t => t.CreatedAt).HasColumnType("DATETIME");
         builder.Property(t => t.UpdatedAt).HasColumnType("DATETIME");

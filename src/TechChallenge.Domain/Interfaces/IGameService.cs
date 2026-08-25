@@ -1,11 +1,19 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 
 namespace TechChallenge.Domain.Interfaces;
 public interface IGameService
 {
     Task<IEnumerable<Game>> GetAllAsync();
-    Task<Game?> GetByIdAsync(int id);
+
+    /// <summary>Lança <see cref="NotFoundException"/> quando o jogo não existe.</summary>
+    Task<Game> GetByIdAsync(int id);
+
     Task<Game> CreateAsync(Game game);
-    Task<Game?> UpdateAsync(int id, Game game);
-    Task<bool> DeleteAsync(int id);
+
+    /// <summary>Lança <see cref="NotFoundException"/> quando o jogo não existe.</summary>
+    Task<Game> UpdateAsync(int id, Game game);
+
+    /// <summary>Lança <see cref="NotFoundException"/> quando o jogo não existe.</summary>
+    Task DeleteAsync(int id);
 }

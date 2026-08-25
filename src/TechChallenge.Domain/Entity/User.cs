@@ -1,8 +1,9 @@
 ﻿using System.Net.Mail;
+using TechChallenge.Domain.Exceptions;
 
 namespace TechChallenge.Domain.Entity;
 
-public class User : EntityBAse
+public class User : EntityBase
 {
     public string Name { get; set; }
     public string Email { get; set; }
@@ -40,27 +41,27 @@ public class User : EntityBAse
     {
         if (string.IsNullOrWhiteSpace(password))
         {
-            throw new ArgumentException("A senha é obrigatória.");
+            throw new DomainException("A senha é obrigatória.");
         }
 
         if (password.Length < 8)
         {
-            throw new ArgumentException("A senha deve possuir no mínimo 8 caracteres.");
+            throw new DomainException("A senha deve possuir no mínimo 8 caracteres.");
         }
 
         if (!password.Any(char.IsLetter))
         {
-            throw new ArgumentException("A senha deve possuir pelo menos uma letra.");
+            throw new DomainException("A senha deve possuir pelo menos uma letra.");
         }
 
         if (!password.Any(char.IsDigit))
         {
-            throw new ArgumentException("A senha deve possuir pelo menos um número.");
+            throw new DomainException("A senha deve possuir pelo menos um número.");
         }
 
         if (!password.Any(c => !char.IsLetterOrDigit(c)))
         {
-            throw new ArgumentException("A senha deve possuir pelo menos um caractere especial.");
+            throw new DomainException("A senha deve possuir pelo menos um caractere especial.");
         }
     }
 
@@ -68,7 +69,7 @@ public class User : EntityBAse
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new ArgumentException("O e-mail é obrigatório.");
+            throw new DomainException("O e-mail é obrigatório.");
         }
 
         try
@@ -77,12 +78,12 @@ public class User : EntityBAse
 
             if (mailAddress.Address != email)
             {
-                throw new ArgumentException("E-mail inválido.");
+                throw new DomainException("E-mail inválido.");
             }
         }
         catch (FormatException)
         {
-            throw new ArgumentException("E-mail inválido.");
+            throw new DomainException("E-mail inválido.");
         }
     }
 }

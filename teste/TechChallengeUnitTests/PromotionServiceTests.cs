@@ -1,5 +1,6 @@
 ﻿using Moq;
 using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
 using TechChallenge.Domain.Models.Promotion;
 using TechChallenge.Domain.Services;
@@ -113,7 +114,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -150,7 +151,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -180,7 +181,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -210,7 +211,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -242,7 +243,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -272,7 +273,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -319,7 +320,7 @@ public class PromotionServiceTests
 
         // Act
         var exception =
-            await Assert.ThrowsAsync<ArgumentException>(
+            await Assert.ThrowsAsync<DomainException>(
                 () =>
                     _promotionService.CreateAsync(
                         request,
@@ -446,7 +447,7 @@ public class PromotionServiceTests
     }
 
     [Fact]
-    public async Task ShouldReturnNull_WhenPromotionDoesNotExist()
+    public async Task ShouldThrowNotFoundException_WhenPromotionDoesNotExist()
     {
         // Arrange
         _promotionRepositoryMock
@@ -454,12 +455,10 @@ public class PromotionServiceTests
                 repository.GetByIdAsync(99))
             .ReturnsAsync((Promotion?)null);
 
-        // Act
-        var result =
-            await _promotionService.GetByIdAsync(99);
-
-        // Assert
-        Assert.Null(result);
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            async () => await _promotionService.GetByIdAsync(99)
+        );
     }
 
     [Fact]
@@ -489,12 +488,9 @@ public class PromotionServiceTests
             .Returns(Task.CompletedTask);
 
         // Act
-        var result =
-            await _promotionService.DeleteAsync(1);
+        await _promotionService.DeleteAsync(1);
 
         // Assert
-        Assert.True(result);
-
         _promotionRepositoryMock.Verify(
             repository =>
                 repository.DeleteAsync(promotion),
@@ -503,7 +499,7 @@ public class PromotionServiceTests
     }
 
     [Fact]
-    public async Task ShouldReturnFalse_WhenDeletingPromotionThatDoesNotExist()
+    public async Task ShouldThrowNotFoundException_WhenDeletingPromotionThatDoesNotExist()
     {
         // Arrange
         _promotionRepositoryMock
@@ -511,12 +507,10 @@ public class PromotionServiceTests
                 repository.GetByIdAsync(99))
             .ReturnsAsync((Promotion?)null);
 
-        // Act
-        var result =
-            await _promotionService.DeleteAsync(99);
-
-        // Assert
-        Assert.False(result);
+        // Act + Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            async () => await _promotionService.DeleteAsync(99)
+        );
 
         _promotionRepositoryMock.Verify(
             repository =>

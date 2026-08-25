@@ -23,6 +23,8 @@ public class AuthController : ControllerBase
     /// <param name="request"></param>
     /// <returns></returns>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] RegisterUserRequest request)
     {
         var createdUser =  await _userService.CreateAsync(request);
@@ -36,15 +38,14 @@ public class AuthController : ControllerBase
     /// <param name="login"></param>
     /// <returns></returns>
     [HttpPost("login")]
+    [ProducesResponseType(typeof(GeneratedToken), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] UserLogin login)
     {
         var user = await _userService.AuthenticateAsync(login.Login, login.Password);
 
-        if (user == null)
-            return Unauthorized("Usuário ou senha inválidos");
-
         var token = _tokenService.GenerateToken(user);
 
         return Ok(token);
-    } 
+    }
 }

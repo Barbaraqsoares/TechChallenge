@@ -106,15 +106,22 @@ public class ExceptionHandlingMiddleware
 
     /// <summary>
     /// Traduz o tipo da exceção no status HTTP correspondente.
-    /// A ordem importa: NotFoundException herda de DomainException e precisa vir antes.
+    ///
+    /// A ordem importa: NotFoundException e ConflictException herdam de DomainException
+    /// e precisam vir antes dela, senão nunca seriam alcançadas.
+    ///
+    /// Só exceções do nosso domínio são traduzidas em 4xx. Exceções do .NET
+    /// (ArgumentException, InvalidOperationException e afins) caem no 500 de propósito:
+    /// quando aparecem, são bug nosso, não erro de quem chamou. Mapeá-las para 400
+    /// esconderia a falha do monitoramento e ainda exporia a mensagem interna —
+    /// o Detail só é devolvido ao cliente quando o status não é 500.
     /// </summary>
     private static (int StatusCode, string Title) MapException(Exception exception) => exception switch
     {
-        NotFoundException =>(StatusCodes.Status404NotFound, "Recurso não encontrado"),
+        NotFoundException => (StatusCodes.Status404NotFound, "Recurso não encontrado"),
+        ConflictException => (StatusCodes.Status409Conflict, "Conflito com o estado atual do recurso"),
         DomainException => (StatusCodes.Status400BadRequest, "Requisição inválida"),
-        ArgumentException =>(StatusCodes.Status400BadRequest, "Requisição inválida"),
-        InvalidOperationException =>(StatusCodes.Status400BadRequest, "Requisição inválida"),
-        UnauthorizedAccessException =>(StatusCodes.Status401Unauthorized, "Não autorizado"),
-        _ =>(StatusCodes.Status500InternalServerError,"Erro interno do servidor")
+        UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Não autorizado"),
+        _ => (StatusCodes.Status500InternalServerError, "Erro interno do servidor")
     };
 }
