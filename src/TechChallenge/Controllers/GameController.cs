@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.Games;
 
 namespace TechChallenge.Controllers;
 
@@ -16,12 +16,14 @@ public class GameController : ControllerBase
     {
         _gameService = gameService;
     }
+
     /// <summary>
     /// Retorna todos os games disponíveis.
     /// </summary>
-    /// <returns></returns>
     [HttpGet]
     [Authorize(Roles = "Admin,Client")]
+    [ProducesResponseType(typeof(IEnumerable<GameResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetallGames()
     {
         var games = await _gameService.GetAllAsync();
@@ -32,51 +34,51 @@ public class GameController : ControllerBase
     /// <summary>
     /// Retorna um game específico pelo ID.
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    /// <param name="id">Identificador do game.</param>
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin,Client")]
-    [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GameResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetGameById(int id)
     {
         return Ok(await _gameService.GetByIdAsync(id));
     }
 
-
     /// <summary>
     /// Cria um novo game (apenas para administradores).
     /// </summary>
-    /// <returns></returns>
+    /// <param name="request">Nome, descrição, preço e se é multiplayer.</param>
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> Create([FromBody] Game game)
+    [ProducesResponseType(typeof(GameResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Create([FromBody] CreateGameRequest request)
     {
-        var createdGame = await _gameService.CreateAsync(game);
+        var createdGame = await _gameService.CreateAsync(request);
 
         return CreatedAtAction(nameof(GetGameById), new { id = createdGame.Id }, createdGame);
     }
+
     /// <summary>
     /// Atualiza um game existente pelo ID (apenas para administradores).
     /// </summary>
-    /// <param name="id"></param>
-    /// <param name="game"-></param>
-    /// <returns></returns>
+    /// <param name="id">Identificador do game.</param>
+    /// <param name="request">Dados do game, incluindo se continua ativo no catálogo.</param>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GameResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateGame(int id, [FromBody] Game game)
+    public async Task<IActionResult> UpdateGame(int id, [FromBody] UpdateGameRequest request)
     {
-        return Ok(await _gameService.UpdateAsync(id, game));
+        return Ok(await _gameService.UpdateAsync(id, request));
     }
 
     /// <summary>
     /// Deleta um game existente pelo ID (apenas para administradores).
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
+    /// <param name="id">Identificador do game.</param>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

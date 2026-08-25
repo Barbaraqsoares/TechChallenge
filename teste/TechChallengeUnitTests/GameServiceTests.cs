@@ -2,6 +2,7 @@
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.Games;
 using TechChallenge.Domain.Services;
 
 namespace TechChallengeUnitTests;
@@ -14,7 +15,7 @@ public class GameServiceTests
         // Arrange
         var repositoryMock = new Mock<IGameRepository>();
 
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "Minecraft",
             Description = "Building and exploration game",
@@ -47,7 +48,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "",
             Description = "Test game",
@@ -69,7 +70,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "Test Game",
             Description = "Test description",
@@ -96,7 +97,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "Minecraft",
             Price = 99.90m
@@ -122,7 +123,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "Minecraft",
             Price = 99.90m
@@ -199,7 +200,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var updatedGame = new Game
+        var updatedGame = new UpdateGameRequest
         {
             Name = "Minecraft Deluxe",
             Description = "Updated description",
@@ -261,7 +262,7 @@ public class GameServiceTests
 
         var service = new GameService(repositoryMock.Object);
 
-        var game = new Game
+        var game = new UpdateGameRequest
         {
             Name = "Test Game",
             Price = 100

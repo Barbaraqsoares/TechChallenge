@@ -1,5 +1,6 @@
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Exceptions;
+using TechChallenge.Domain.Models.Games;
 using TechChallenge.Domain.Services;
 using TechChallenge.Infrastructure.Repository;
 
@@ -22,7 +23,7 @@ public class GameFlowTests : IntegrationTestBase
     public async Task DevePersistirOJogo_QuandoCriado()
     {
         // Arrange
-        var game = new Game
+        var game = new CreateGameRequest
         {
             Name = "Minecraft",
             Description = "Sandbox",
@@ -48,8 +49,8 @@ public class GameFlowTests : IntegrationTestBase
     public async Task DeveGerarIdAutomaticamente_QuandoJogoEPersistido()
     {
         // Act
-        var primeiro = await _service.CreateAsync(new Game { Name = "Jogo A", Price = 10 });
-        var segundo = await _service.CreateAsync(new Game { Name = "Jogo B", Price = 20 });
+        var primeiro = await _service.CreateAsync(new CreateGameRequest { Name = "Jogo A", Price = 10 });
+        var segundo = await _service.CreateAsync(new CreateGameRequest { Name = "Jogo B", Price = 20 });
 
         // Assert
         // O Id é responsabilidade do banco — em teste de unidade com mock ele
@@ -62,7 +63,7 @@ public class GameFlowTests : IntegrationTestBase
     public async Task NaoDevePersistirOJogo_QuandoDadosSaoInvalidos()
     {
         // Arrange
-        var game = new Game { Name = "", Price = 50 };
+        var game = new CreateGameRequest { Name = "", Price = 50 };
 
         // Act + Assert
         await Assert.ThrowsAsync<DomainException>(() => _service.CreateAsync(game));
@@ -109,7 +110,7 @@ public class GameFlowTests : IntegrationTestBase
         LimparRastreamento();
 
         // Act
-        await _service.UpdateAsync(game.Id, new Game
+        await _service.UpdateAsync(game.Id, new UpdateGameRequest
         {
             Name = "Minecraft Deluxe",
             Description = "Edição especial",
@@ -137,7 +138,7 @@ public class GameFlowTests : IntegrationTestBase
         LimparRastreamento();
 
         // Act
-        await _service.UpdateAsync(game.Id, new Game
+        await _service.UpdateAsync(game.Id, new UpdateGameRequest
         {
             Name = "Outro nome",
             Price = 50,

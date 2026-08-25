@@ -1,6 +1,7 @@
-﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Exceptions;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.Games;
 
 namespace TechChallenge.Domain.Services;
 
@@ -13,45 +14,62 @@ public class GameService : IGameService
         _gameRepository = gameRepository;
     }
 
-    public async Task<IEnumerable<Game>> GetAllAsync()
+    public async Task<IEnumerable<GameResponse>> GetAllAsync()
     {
-        return await _gameRepository.GetAllAsync();
+        var games = await _gameRepository.GetAllAsync();
+
+        return games.Select(MapToResponse);
     }
 
-    public async Task<Game> GetByIdAsync(int id)
+    public async Task<GameResponse> GetByIdAsync(int id)
     {
-        return await _gameRepository.GetByIdAsync(id)
+        var game = await _gameRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Jogo {id} não encontrado.");
+
+        return MapToResponse(game);
     }
 
-    public async Task<Game> CreateAsync(Game game)
+    public async Task<GameResponse> CreateAsync(CreateGameRequest request)
     {
-        ValidateGame(game);
+        ValidateGame(request.Name, request.Price);
 
-        game.CreatedAt = DateTime.Now;
-        game.UpdatedAt = DateTime.Now;
-        game.IsActive = true;
+        var game = new Game
+        {
+            Name = request.Name.Trim(),
+            Description = request.Description,
+            Price = request.Price,
+            IsMultiplayer = request.IsMultiplayer,
 
-        return await _gameRepository.AddAsync(game);
+            // Jogo nasce ativo e com as datas definidas aqui: nenhum dos três vem do
+            // cliente, senão ele conseguiria cadastrar um jogo já inativo ou forjar a
+            // data de criação.
+            IsActive = true,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+
+        var createdGame = await _gameRepository.AddAsync(game);
+
+        return MapToResponse(createdGame);
     }
 
-    public async Task<Game> UpdateAsync(int id, Game game)
+    public async Task<GameResponse> UpdateAsync(int id, UpdateGameRequest request)
     {
         var existingGame = await _gameRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Jogo {id} não encontrado.");
 
-        ValidateGame(game);
+        ValidateGame(request.Name, request.Price);
 
-        existingGame.Name = game.Name;
-        existingGame.Description = game.Description;
-        existingGame.Price = game.Price;
-        existingGame.IsMultiplayer = game.IsMultiplayer;
-        existingGame.IsActive = game.IsActive;
+        existingGame.Name = request.Name.Trim();
+        existingGame.Description = request.Description;
+        existingGame.Price = request.Price;
+        existingGame.IsMultiplayer = request.IsMultiplayer;
+        existingGame.IsActive = request.IsActive;
         existingGame.UpdatedAt = DateTime.Now;
 
         await _gameRepository.UpdateAsync(existingGame);
 
-        return existingGame;
+        return MapToResponse(existingGame);
     }
 
     public async Task DeleteAsync(int id)
@@ -62,12 +80,27 @@ public class GameService : IGameService
         await _gameRepository.DeleteAsync(game);
     }
 
-    private static void ValidateGame(Game game)
+    private static void ValidateGame(string name, decimal price)
     {
-        if (string.IsNullOrWhiteSpace(game.Name))
+        if (string.IsNullOrWhiteSpace(name))
             throw new DomainException("O nome do jogo é obrigatório.");
 
-        if (game.Price < 0)
+        if (price < 0)
             throw new DomainException("O preço do jogo não pode ser negativo.");
+    }
+
+    private static GameResponse MapToResponse(Game game)
+    {
+        return new GameResponse
+        {
+            Id = game.Id,
+            Name = game.Name,
+            Description = game.Description,
+            Price = game.Price,
+            IsActive = game.IsActive,
+            IsMultiplayer = game.IsMultiplayer,
+            CreatedAt = game.CreatedAt,
+            UpdatedAt = game.UpdatedAt
+        };
     }
 }
