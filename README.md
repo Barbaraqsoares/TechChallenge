@@ -187,8 +187,8 @@ Perfis: **Público** (sem token), **Cliente** e **Admin**.
 
 ## Tratamento de erros
 
-Toda falha passa por um middleware central e volta no formato **ProblemDetails
-(RFC 7807)**, com `content-type: application/problem+json`:
+As falhas da aplicação passam por um middleware central e voltam no formato
+**ProblemDetails (RFC 7807)**, com `content-type: application/problem+json`:
 
 ```json
 {
@@ -200,18 +200,37 @@ Toda falha passa por um middleware central e volta no formato **ProblemDetails
 }
 ```
 
-| Status | Quando acontece |
-|---|---|
-| 400 | Dados inválidos (senha fraca, e-mail malformado, preço negativo) |
-| 401 | Sem token, token inválido ou credenciais erradas |
-| 403 | Perfil sem permissão para o endpoint |
-| 404 | Recurso não encontrado |
-| 409 | Conflito com o estado atual (login/e-mail já cadastrado, jogo já na biblioteca) |
-| 500 | Erro inesperado — devolve mensagem genérica e registra o stack trace no log |
+| Status | Quando acontece | Corpo |
+|---|---|---|
+| 400 | Dados inválidos (senha fraca, e-mail malformado, preço negativo) | ProblemDetails |
+| 401 | Credenciais erradas no login | ProblemDetails |
+| 404 | Recurso não encontrado | ProblemDetails |
+| 409 | Conflito com o estado atual (login/e-mail já cadastrado, jogo já na biblioteca) | ProblemDetails |
+| 500 | Erro inesperado — mensagem genérica; o stack trace fica só no log | ProblemDetails |
+| 401 | Token ausente, inválido ou expirado | vazio + `WWW-Authenticate` |
+| 403 | Perfil sem permissão para o endpoint | vazio |
 
 O `traceId` da resposta é o mesmo gravado no log estruturado (Serilog), o que permite
 localizar no log exatamente o erro que o usuário viu. Em erros 500 a mensagem original
 nunca é exposta ao cliente.
+
+### Sobre os 401 e 403 sem corpo
+
+As duas últimas linhas da tabela não passam pelo middleware: `UseAuthentication` e
+`UseAuthorization` interrompem o pipeline antes dos controllers, sem lançar exceção.
+São respostas geradas pelo próprio ASP.NET Core.
+
+Isso está de acordo com a RFC 9110, que exige apenas o header `WWW-Authenticate` no 401
+— e ele vem preenchido, distinguindo os dois casos:
+
+```
+Sem token:       WWW-Authenticate: Bearer
+Token inválido:  WWW-Authenticate: Bearer error="invalid_token"
+```
+
+Corpo em respostas de erro é opcional pela especificação. Mantivemos o comportamento
+padrão do framework: quem consome a API deve tratar 401 e 403 pelo status e pelo header,
+e os demais erros pelo corpo em ProblemDetails.
 
 ## Testes
 
@@ -249,23 +268,19 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ### Testes manuais da API
 
-Com a aplicação no ar, há duas formas de exercitar os endpoints sem usar o Swagger:
+Com a aplicação no ar, importe no Postman a coleção
+`postman/TechChallenge-Demo.postman_collection.json`.
 
-- **Postman** — duas coleções em `postman/`:
-  - `TechChallenge-Demo.postman_collection.json` — **18 requisições** na ordem de uma
-    apresentação, cobrindo cada requisito do desafio uma vez. É a indicada para
-    demonstrar o projeto.
-  - `TechChallenge.postman_collection.json` — **53 requisições**, a bateria completa
-    de regressão.
+São **18 requisições** na ordem de uma apresentação, cobrindo cada requisito do desafio
+uma vez: cadastro com validação, autenticação JWT, os dois níveis de acesso, catálogo e
+promoções pelo administrador, e a biblioteca do usuário.
 
-  Nas duas, os tokens de administrador e de cliente e os ids de jogo e promoção são
-  capturados automaticamente: basta importar e rodar na ordem (*Run collection*). Cada
-  requisição valida o status e, nos erros, o formato ProblemDetails.
-- **Arquivo `.http`** — `src/TechChallenge/TechChallenge.http`, para rodar direto do
-  Visual Studio. Aqui o token precisa ser colado à mão numa variável; as instruções estão
-  no cabeçalho do arquivo.
+Os tokens de administrador e de cliente e o id do jogo são capturados automaticamente —
+basta importar e rodar na ordem (*Run collection*). Cada requisição valida o status e,
+nos erros da aplicação, o formato ProblemDetails. A coleção pode ser executada várias
+vezes seguidas sem recriar o banco.
 
-Para rodar a coleção pela linha de comando:
+Para rodar pela linha de comando:
 
 ```bash
 npx newman run postman/TechChallenge-Demo.postman_collection.json
