@@ -247,6 +247,30 @@ dotnet test --collect:"XPlat Code Coverage"
 | **BDD** | Cenários de cadastro de usuário escritos em Gherkin e executados com Reqnroll — ver `teste/TechChallengeUnitTests/Features/UserRegistration.feature` |
 | **Integração** | Services + repositórios + Entity Framework reais sobre banco em memória, verificando que o dado chega ao banco e que as camadas conversam |
 
+### Testes manuais da API
+
+Com a aplicação no ar, há duas formas de exercitar os endpoints sem usar o Swagger:
+
+- **Postman** — duas coleções em `postman/`:
+  - `TechChallenge-Demo.postman_collection.json` — **18 requisições** na ordem de uma
+    apresentação, cobrindo cada requisito do desafio uma vez. É a indicada para
+    demonstrar o projeto.
+  - `TechChallenge.postman_collection.json` — **53 requisições**, a bateria completa
+    de regressão.
+
+  Nas duas, os tokens de administrador e de cliente e os ids de jogo e promoção são
+  capturados automaticamente: basta importar e rodar na ordem (*Run collection*). Cada
+  requisição valida o status e, nos erros, o formato ProblemDetails.
+- **Arquivo `.http`** — `src/TechChallenge/TechChallenge.http`, para rodar direto do
+  Visual Studio. Aqui o token precisa ser colado à mão numa variável; as instruções estão
+  no cabeçalho do arquivo.
+
+Para rodar a coleção pela linha de comando:
+
+```bash
+npx newman run postman/TechChallenge-Demo.postman_collection.json
+```
+
 ## Documentação DDD
 
 O Event Storming dos fluxos está em `docs/`:
