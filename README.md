@@ -7,6 +7,11 @@ será uma plataforma de venda de jogos digitais e gestão de servidores para par
 online; esta fase entrega o MVP que serve de base para as próximas — matchmaking e
 gerenciamento de servidores.
 
+## Vídeo de apresentação
+
+Demonstração do projeto e dos requisitos da fase:
+**https://www.youtube.com/watch?v=xRCkc1s4kdo**
+
 ## Objetivos da fase
 
 - Cadastrar usuários com validação de e-mail e senha segura
@@ -21,6 +26,7 @@ gerenciamento de servidores.
 
 ## Sumário
 
+- [Vídeo de apresentação](#vídeo-de-apresentação)
 - [Pré-requisitos](#pré-requisitos)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Subindo com Docker](#subindo-com-docker)
