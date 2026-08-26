@@ -7,6 +7,11 @@ será uma plataforma de venda de jogos digitais e gestão de servidores para par
 online; esta fase entrega o MVP que serve de base para as próximas — matchmaking e
 gerenciamento de servidores.
 
+## Vídeo de apresentação
+
+Demonstração do projeto e dos requisitos da fase:
+**https://www.youtube.com/watch?v=xRCkc1s4kdo**
+
 ## Objetivos da fase
 
 - Cadastrar usuários com validação de e-mail e senha segura
@@ -21,6 +26,7 @@ gerenciamento de servidores.
 
 ## Sumário
 
+- [Vídeo de apresentação](#vídeo-de-apresentação)
 - [Pré-requisitos](#pré-requisitos)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [Subindo com Docker](#subindo-com-docker)
@@ -39,7 +45,8 @@ gerenciamento de servidores.
 ## Pré-requisitos
 
 - Docker Desktop (inclui docker-compose)
-- (Opcional) .NET 8 SDK para rodar localmente: https://dotnet.microsoft.com
+- .NET 8 SDK — necessário para rodar a API fora do container e para executar os testes: https://dotnet.microsoft.com
+  (dispensável se você for usar somente o Docker)
 - (Opcional) SQL Server tools (sqlcmd) ou cliente GUI (SSMS / Azure Data Studio)
 
 ## Estrutura do projeto
@@ -51,7 +58,7 @@ gerenciamento de servidores.
 - `teste/TechChallengeIntegrationTests`: testes de integração entre as camadas
 - `docs/`: documentação DDD (Event Storming)
 - `docker-compose.yaml`: define serviços `sqlserver` e `webapp`
-- `Dockerfile`: build e publish do projeto
+- `dockerfile`: build e publish do projeto
 - `appsettings.json`: connection string usada pela aplicação
 
 ## Subindo com Docker
@@ -88,29 +95,36 @@ gerenciamento de servidores.
 
 ## Rodando localmente
 
-1. Ajuste a connection string em `appsettings.json` para apontar para o SQL desejado.
-2. Restaurar e rodar:
+Use este caminho para depurar no Visual Studio ou rodar a API fora do container.
 
-   ```bash
-   dotnet restore
-   ```
-
-   ```bash
-   dotnet build
-   ```
-
-   ```bash
-   dotnet run --project src/TechChallenge
-   ```
-
-A aplicação sobe em http://localhost:5022 e aplica as migrations automaticamente na
-inicialização.
-
-Se precisar subir só o banco e rodar a API pelo Visual Studio:
+**1. Suba o banco.** A aplicação não inicia sem ele — ela aplica as migrations na
+inicialização e encerra se não conseguir conectar:
 
 ```bash
 docker-compose up -d sqlserver
 ```
+
+**2. Rode a API.** Não é preciso alterar nenhuma configuração: o `appsettings.json` já
+aponta para `localhost,1433`, que é a porta publicada pelo container do passo anterior.
+
+```bash
+dotnet restore
+```
+
+```bash
+dotnet build
+```
+
+```bash
+dotnet run --project src/TechChallenge
+```
+
+A aplicação sobe em http://localhost:5022, abre o Swagger na raiz e aplica as migrations
+automaticamente.
+
+> Se o seu SQL Server não for o do `docker-compose`, ajuste
+> `ConnectionStrings:SqlConnection` no `appsettings.json` — os formatos estão em
+> [Connection strings](#connection-strings).
 
 ## Primeiro acesso
 
@@ -177,6 +191,38 @@ Perfis: **Público** (sem token), **Cliente** e **Admin**.
 | GET | `/api/Users` | Admin | Lista os usuários |
 | GET | `/api/Users/{id}` | Admin | Consulta um usuário |
 | DELETE | `/api/Users/{id}` | Admin | Remove um usuário |
+
+### Corpo das requisições
+
+Os campos abaixo são os aceitos pela API. O Swagger mostra o schema completo de cada
+endpoint, mas estes são os que você precisa para testar via `curl`.
+
+**Cadastro de usuário** — `POST /api/auth/register`
+
+```json
+{ "name": "Maria Silva", "email": "maria@fiap.com.br", "login": "maria", "password": "Fiap@2026" }
+```
+
+**Login** — `POST /api/auth/login`
+
+```json
+{ "login": "maria", "password": "Fiap@2026" }
+```
+
+**Jogo** — `POST /Game` e `PUT /Game/{id}`
+
+```json
+{ "name": "Minecraft", "description": "Jogo de construção e exploração", "price": 99.90, "isMultiplayer": true }
+```
+
+**Promoção** — `POST /api/Promotions`
+
+```json
+{ "name": "Black Friday", "discount": 25, "startDate": "2026-11-27", "endDate": "2026-11-30", "gameIds": [1, 2] }
+```
+
+**Aquisição de jogo** — `POST /api/LibraryOfGames/{gameId}` não tem corpo: o jogo vem
+na rota e o usuário, do token.
 
 ### Regras de cadastro
 
@@ -306,8 +352,11 @@ O Event Storming dos fluxos está em `docs/`:
 - Usando sqlcmd dentro do container:
 
   ```bash
-  docker exec -it TechChallengeSQL /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "SELECT name FROM sys.databases;"
+  docker exec -it TechChallengeSQL /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P 'YourStrong!Passw0rd' -Q "SELECT name FROM sys.databases;"
   ```
+
+  A imagem do SQL Server 2022 traz o `mssql-tools18`, cujo `sqlcmd` exige conexão
+  criptografada — daí o `-C`, que aceita o certificado autoassinado do container.
 
 ## Connection strings
 
