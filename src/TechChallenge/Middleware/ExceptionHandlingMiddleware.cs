@@ -120,6 +120,7 @@ public class ExceptionHandlingMiddleware
     {
         NotFoundException => (StatusCodes.Status404NotFound, "Recurso não encontrado"),
         ConflictException => (StatusCodes.Status409Conflict, "Conflito com o estado atual do recurso"),
+        ForbiddenException => (StatusCodes.Status403Forbidden, "Acesso restrito"),
         DomainException => (StatusCodes.Status400BadRequest, "Requisição inválida"),
         UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Não autorizado"),
         _ => (StatusCodes.Status500InternalServerError, "Erro interno do servidor")
