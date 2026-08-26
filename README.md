@@ -254,29 +254,42 @@ As falhas da aplicação passam por um middleware central e voltam no formato
 | 409 | Conflito com o estado atual (login/e-mail já cadastrado, jogo já na biblioteca) | ProblemDetails |
 | 500 | Erro inesperado — mensagem genérica; o stack trace fica só no log | ProblemDetails |
 | 401 | Token ausente, inválido ou expirado | vazio + `WWW-Authenticate` |
-| 403 | Perfil sem permissão para o endpoint | vazio |
+| 403 | Perfil sem permissão para o endpoint | ProblemDetails |
 
 O `traceId` da resposta é o mesmo gravado no log estruturado (Serilog), o que permite
 localizar no log exatamente o erro que o usuário viu. Em erros 500 a mensagem original
 nunca é exposta ao cliente.
 
-### Sobre os 401 e 403 sem corpo
+### Sobre o 401 e o 403
 
-As duas últimas linhas da tabela não passam pelo middleware: `UseAuthentication` e
-`UseAuthorization` interrompem o pipeline antes dos controllers, sem lançar exceção.
-São respostas geradas pelo próprio ASP.NET Core.
+Essas duas respostas não passam pelo middleware de exceções: `UseAuthentication` e
+`UseAuthorization` encerram o pipeline antes dos controllers, sem lançar exceção. Por
+isso o comportamento padrão do ASP.NET Core é devolvê-las sem corpo.
 
-Isso está de acordo com a RFC 9110, que exige apenas o header `WWW-Authenticate` no 401
-— e ele vem preenchido, distinguindo os dois casos:
+O **403 foi padronizado** no evento `OnForbidden` do JWT Bearer, para sair no mesmo
+formato dos demais erros da API:
+
+```json
+{
+  "title": "Acesso negado",
+  "status": 403,
+  "detail": "Seu perfil não tem permissão para acessar este recurso.",
+  "instance": "/api/Users",
+  "traceId": "0HNO3OSTSU1IV:00000001"
+}
+```
+
+O **401 foi mantido no comportamento do framework**, de propósito: personalizá-lo exigiria
+assumir a escrita da resposta e, com isso, reescrever à mão o header `WWW-Authenticate`,
+que é o único obrigatório pela RFC 9110 e hoje já distingue os dois casos:
 
 ```
 Sem token:       WWW-Authenticate: Bearer
 Token inválido:  WWW-Authenticate: Bearer error="invalid_token"
 ```
 
-Corpo em respostas de erro é opcional pela especificação. Mantivemos o comportamento
-padrão do framework: quem consome a API deve tratar 401 e 403 pelo status e pelo header,
-e os demais erros pelo corpo em ProblemDetails.
+Ou seja: quem consome a API trata o 401 pelo status e pelo header, e todos os demais
+erros — incluindo o 403 — pelo corpo em ProblemDetails.
 
 ## Testes
 

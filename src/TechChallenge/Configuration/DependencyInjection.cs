@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -50,6 +51,41 @@ public static class DependencyInjection
     }
 
     /// <summary>
+    /// Escreve a resposta de erro no mesmo formato ProblemDetails (RFC 7807) usado
+    /// pelo ExceptionHandlingMiddleware, para que quem consome a API trate todos os
+    /// erros da mesma maneira — inclusive os gerados pelo pipeline de autorização.
+    /// </summary>
+    private static async Task WriteProblemDetails(
+        HttpContext context,
+        int statusCode,
+        string title,
+        string detail)
+    {
+        // Se a resposta já começou a ser enviada, não é mais possível alterá-la.
+        if (context.Response.HasStarted)
+        {
+            return;
+        }
+
+        var problemDetails = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = detail,
+            Instance = context.Request.Path
+        };
+
+        problemDetails.Extensions["traceId"] = context.TraceIdentifier;
+
+        context.Response.StatusCode = statusCode;
+
+        await context.Response.WriteAsJsonAsync(
+            problemDetails,
+            options: null,
+            contentType: "application/problem+json");
+    }
+
+    /// <summary>
     /// Autenticação por token JWT, conforme exigido pelo desafio.
     /// As configurações vêm da seção "Jwt" do appsettings — as mesmas usadas pelo
     /// TokenService para assinar, de modo que assinatura e validação sempre batem.
@@ -90,6 +126,48 @@ public static class DependencyInjection
 
                 // Sem isso o .NET aceita um token até 5 minutos após expirar.
                 ClockSkew = TimeSpan.Zero
+            };
+
+
+            // 401 e 403 não passam pelo ExceptionHandlingMiddleware: o pipeline de
+            // autenticação/autorização encerra a requisição antes dos controllers,
+            // sem lançar exceção. Estes eventos são o lugar de padronizar as duas
+            // respostas no mesmo formato ProblemDetails do resto da API.
+            options.Events = new JwtBearerEvents
+            {
+                // Token ausente, inválido ou expirado.
+                OnChallenge = context =>
+                {
+                    // Sem isto o ASP.NET escreveria a resposta vazia padrão por cima
+                    // da nossa.
+                    context.HandleResponse();
+
+                    // HandleResponse também cancela a escrita automática do
+                    // WWW-Authenticate — e a RFC 9110 exige esse header no 401.
+                    // Reproduzimos aqui os mesmos dois valores que o framework
+                    // produzia: "Bearer" quando não veio token, e
+                    // Bearer error="invalid_token" quando o token foi recusado.
+                    context.Response.Headers.WWWAuthenticate = string.IsNullOrEmpty(context.Error)
+                        ? "Bearer"
+                        : $"Bearer error=\"{context.Error}\"";
+
+                    var tokenExpirado = context.AuthenticateFailure is SecurityTokenExpiredException;
+
+                    return WriteProblemDetails(
+                        context.HttpContext,
+                        StatusCodes.Status401Unauthorized,
+                        "Não autenticado",
+                        tokenExpirado
+                            ? "Seu token expirou. Autentique-se novamente em /api/auth/login."
+                            : "Informe um token válido no cabeçalho Authorization, no formato: Bearer {token}.");
+                },
+
+                // Autenticado, mas o perfil não tem permissão para o endpoint.
+                OnForbidden = context => WriteProblemDetails(
+                    context.HttpContext,
+                    StatusCodes.Status403Forbidden,
+                    "Acesso negado",
+                    "Seu perfil não tem permissão para acessar este recurso.")
             };
         });
 
