@@ -97,4 +97,10 @@ public class UserService : IUserService
 
         await _userRepository.DeleteAsync(user);
     }
+
+    public async Task<UserResponse> UpdateAsync(int id, UserUpdateRequest request)
+    {
+        var userUpdated = await _userRepository.UpdateAsync(id, request);
+        return userUpdated;
+    }
 }

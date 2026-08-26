@@ -17,5 +17,7 @@ public interface IUserService
     Task<UserResponse> GetByIdAsync(int id);
 
     /// <summary>Lança <see cref="NotFoundException"/> quando o usuário não existe.</summary>
+    
+    Task<UserResponse> UpdateAsync(int id, UserUpdateRequest request);
     Task DeleteAsync(int id);
 }

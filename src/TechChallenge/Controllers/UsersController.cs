@@ -40,6 +40,18 @@ public class UsersController : ControllerBase
         return Ok(await _userService.GetByIdAsync(id));
     }
 
+    ///<summary>
+    ///Atualiza um usuário específico pelo ID (apenas para administradores)
+    ///</summary>
+    ///<param name="id"></param>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(UserResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Update(int id, [FromBody] UserUpdateRequest request)
+    {
+        return Ok(await _userService.UpdateAsync(id, request));
+    }
+
     /// <summary>
     /// Deleta um usuário específico pelo ID (apenas para administradores)
     /// </summary>

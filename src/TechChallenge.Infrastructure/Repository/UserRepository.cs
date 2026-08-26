@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TechChallenge.Domain.Entity;
 using TechChallenge.Domain.Interfaces;
+using TechChallenge.Domain.Models.User;
 
 namespace TechChallenge.Infrastructure.Repository;
 
@@ -40,10 +41,30 @@ public class UserRepository : IUserRepository
         return await _context.Users.AsNoTracking().ToListAsync();
     }
 
-    public async Task UpdateAsync(User user)
+    public async Task<UserResponse> UpdateAsync(int id, UserUpdateRequest user)
     {
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync();
+        var userUpdate = _context.Users.FirstOrDefault(u => u.Id == id);
+
+        if (userUpdate != null)
+        {
+            userUpdate.Name = user.Name;
+            userUpdate.Email = user.Email;
+            userUpdate.Login = user.Login;
+            userUpdate.Perfil = user.Perfil;
+
+            _context.Users.Update(userUpdate);
+            await _context.SaveChangesAsync();
+        }
+
+        return new UserResponse
+        {
+            Id = userUpdate.Id,
+            Name = userUpdate.Name,
+            Email = userUpdate.Email,
+            Login = userUpdate.Login,
+            Perfil = userUpdate.Perfil,
+            CreatedAt = userUpdate.CreatedAt
+        };
     }
 
     public async Task DeleteAsync(User user)

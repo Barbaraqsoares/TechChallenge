@@ -1,4 +1,5 @@
 ﻿using TechChallenge.Domain.Entity;
+using TechChallenge.Domain.Models.User;
 
 namespace TechChallenge.Domain.Interfaces;
 public interface IUserRepository
@@ -8,6 +9,6 @@ public interface IUserRepository
     Task<User> AddAsync(User user);
     Task<User?> GetByIdAsync(int id);
     Task<List<User>> GetAllAsync();
-    Task UpdateAsync(User user);
+    Task<UserResponse> UpdateAsync(int id, UserUpdateRequest user);
     Task DeleteAsync(User user);
 }

@@ -78,7 +78,7 @@ gerenciamento de servidores.
    docker-compose logs -f sqlserver
    ```
 
-4. Acessar a API: http://localhost:8080/ — a raiz abre direto o Swagger.
+4. Acessar a API: http://localhost:5022/ — a raiz abre direto o Swagger.
 
 5. Parar e remover containers/volumes:
 
@@ -124,7 +124,7 @@ usar os endpoints protegidos:
 Para obter o token:
 
 ```bash
-curl -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/json" -d "{\"login\":\"admin\",\"password\":\"Admin@123\"}"
+curl -X POST http://localhost:5022/api/auth/login -H "Content-Type: application/json" -d "{\"login\":\"admin\",\"password\":\"Admin@123\"}"
 ```
 
 A resposta traz o token e a data de expiração. No Swagger, clique em **Authorize** e
