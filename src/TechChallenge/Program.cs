@@ -1,105 +1,56 @@
-using Desafio.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using System.Reflection;
-using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
+using Serilog;
+using TechChallenge.Configuration;
+using TechChallenge.Domain.Interfaces;
+using TechChallenge.Infrastructure.Authentication;
+using TechChallenge.Middleware;
+using TechChallenge.Extensions;
 
-// Configuração da autenticação JWT
-builder.Services.AddAuthentication(options =>
+// Logger provisório, ativo apenas até o host subir com a configuração definitiva.
+// Sem ele o Serilog usa um logger silencioso nesse intervalo, e uma falha antes do
+// builder.Build() — connection string inválida, porta ocupada, migration quebrada —
+// não seria registrada em lugar nenhum: o Log.Fatal lá embaixo escreveria no vazio.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+
+try
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilogLogging();
+
+    // Mantém configuração do JWT disponível via IOptions<JwtSettings>
+    builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection(JwtSettings.SecaoConfiguracao));
+
+    // Registrar serviços e documentação usando métodos centralizados
+    builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddSwaggerDocumentation();
+
+    // Serviços da aplicação
+    builder.Services.AddScoped<ITokenService, TokenService>();
+    builder.Services.AddControllers();
+
+    var app = builder.Build();
+
+    // Migração e seed do banco de dados
+    await app.MigrateAndSeedAsync();
+
+    // Pipeline de middlewares e roteamento
+    app.UseInfrastructurePipeline();
+
+    app.Run();
+}
+
+catch (Exception exception) when (exception is not HostAbortedException)
 {
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-
-        ValidIssuer = "suaempresa.com",       // quem emite o token
-        ValidAudience = "suaempresa.com",     // quem consome o token
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes("chave-secreta-super-segura"))
-    };
-});
-
-// Add services to the container.
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+    Log.Fatal(exception, "A aplicação não pôde ser iniciada");
+    return 1;
+}
+finally
 {
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Tech Challenge",
-        Version = "v1",
-        Description = "Tech Challenge",
-        Contact = new OpenApiContact
-        {
-            Name = "Equipe Desafio",
-            Email = "contato@desafio.com"
-        }
-    });
+    Log.CloseAndFlush();
+}
 
-    // Configuração de segurança JWT
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Description = "Insira o token JWT no campo abaixo usando o esquema: Bearer {seu token}",
-        Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
-    });
-
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-
-    // Comentários XML (se habilitado no .csproj)
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath))
-    {
-        c.IncludeXmlComments(xmlPath);
-    }
-});
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-
-app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Desafio API v1");
-    c.RoutePrefix = string.Empty; // abre direto na raiz
-});
-
-app.UseHttpsRedirection();
-
-// Ativar autenticação e autorização
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.UseMiddleware<JwtMiddleware>();
-
-app.MapControllers();
-
-app.Run();
+return 0;

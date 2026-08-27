@@ -1,0 +1,660 @@
+<title>Event Storming FCG</title>
+
+<style>
+  /* ---------------------------------------------------------------
+     Paleta: as cores dos post-its são as canônicas da disciplina
+     (evento laranja, comando azul, ator amarelo, política roxa,
+     modelo de leitura verde, ponto de atenção rosa). O fundo é um
+     cinza frio de quadro de sala — escolhido para contrastar com o
+     laranja que domina a parede.
+     --------------------------------------------------------------- */
+  :root {
+    --board: #E7EAEE;
+    --board-line: #D2D7DE;
+    --panel: #F7F8FA;
+    --ink: #16191D;
+    --ink-soft: #565E68;
+    --ink-faint: #838C97;
+    --rule: #C9D0D8;
+
+    --evento: #F2A03D;
+    --evento-edge: #C97A1C;
+    --excecao: #E08A4E;
+    --comando: #74B3E8;
+    --comando-edge: #3D82BC;
+    --ator: #FBE07A;
+    --ator-edge: #D4B639;
+    --politica: #C3A8E8;
+    --politica-edge: #9273BE;
+    --leitura: #A9D9A4;
+    --leitura-edge: #74AC6E;
+    --atencao: #F2A0B4;
+    --atencao-edge: #C46B82;
+
+    --pivotal: #B0303A;
+    --postit-ink: #1B1B1B;
+
+    --shadow: rgba(22, 25, 29, .18);
+
+    --step: clamp(.9rem, .55rem + .5vw, 1.02rem);
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --mono: "Cascadia Mono", Consolas, ui-monospace, "SF Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --board: #191C21;
+      --board-line: #262B32;
+      --panel: #21252B;
+      --ink: #EDF0F3;
+      --ink-soft: #A8B1BC;
+      --ink-faint: #7B8590;
+      --rule: #333941;
+      --shadow: rgba(0, 0, 0, .5);
+
+      /* Papel colorido sob luz baixa: um pouco menos saturado, mas
+         ainda claro o bastante para manter a caneta preta legível. */
+      --evento: #D98C33;
+      --comando: #629CCC;
+      --ator: #DDC565;
+      --politica: #A891C9;
+      --leitura: #93BC8E;
+      --atencao: #D18B9D;
+      --excecao: #C47843;
+      --pivotal: #E0616B;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --board: #191C21;
+    --board-line: #262B32;
+    --panel: #21252B;
+    --ink: #EDF0F3;
+    --ink-soft: #A8B1BC;
+    --ink-faint: #7B8590;
+    --rule: #333941;
+    --shadow: rgba(0, 0, 0, .5);
+    --evento: #D98C33;
+    --comando: #629CCC;
+    --ator: #DDC565;
+    --politica: #A891C9;
+    --leitura: #93BC8E;
+    --atencao: #D18B9D;
+    --excecao: #C47843;
+    --pivotal: #E0616B;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--board);
+    /* Malha discreta de quadro branco */
+    background-image:
+      linear-gradient(var(--board-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--board-line) 1px, transparent 1px);
+    background-size: 46px 46px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: var(--step);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 3vw, 2rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  /* ---------------- Cabeçalho ---------------- */
+  header { display: flex; flex-direction: column; gap: .9rem; }
+
+  .eyebrow {
+    font-size: .7rem;
+    letter-spacing: .17em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 1.2rem + 3.6vw, 3.5rem);
+    line-height: 1.05;
+    letter-spacing: -.015em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h1 em { font-style: italic; color: var(--ink-soft); }
+
+  .lede {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 1.03rem;
+    margin: 0;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.4rem;
+    font-size: .78rem;
+    color: var(--ink-faint);
+    border-top: 1px solid var(--rule);
+    padding-top: .9rem;
+  }
+  .meta b { color: var(--ink-soft); font-weight: 600; }
+
+  /* ---------------- Seções ---------------- */
+  section { display: flex; flex-direction: column; gap: 1.2rem; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(1.35rem, 1rem + 1.2vw, 1.8rem);
+    margin: 0;
+    letter-spacing: -.01em;
+  }
+
+  .sec-head { display: flex; flex-direction: column; gap: .35rem; }
+  .sec-head p { margin: 0; color: var(--ink-soft); max-width: 68ch; }
+
+  /* ---------------- Post-its ---------------- */
+  .postit {
+    position: relative;
+    flex: 0 0 auto;
+    width: 152px;
+    min-height: 92px;
+    padding: .65rem .7rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    color: var(--postit-ink);
+    font-size: .82rem;
+    line-height: 1.3;
+    font-weight: 600;
+    box-shadow: 2px 3px 7px var(--shadow);
+    border-radius: 1px;
+  }
+
+  /* Cada post-it colado ligeiramente torto, como na parede real */
+  .postit:nth-child(3n)   { transform: rotate(-.7deg); }
+  .postit:nth-child(3n+1) { transform: rotate(.5deg); }
+  .postit:nth-child(3n+2) { transform: rotate(-.3deg); }
+
+  .postit .tipo {
+    font-size: .58rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    font-weight: 700;
+    opacity: .62;
+  }
+
+  .evento   { background: var(--evento); }
+  .comando  { background: var(--comando); }
+  .ator     { background: var(--ator); width: 118px; min-height: 62px; }
+  .politica { background: var(--politica); width: 176px; }
+  .leitura  { background: var(--leitura); }
+  .atencao  { background: var(--atencao); }
+
+  /* Caminho de exceção: mesmo tipo de post-it, tom queimado e marca ✕ */
+  .excecao { background: var(--excecao); }
+  .excecao .tipo::after { content: " ✕"; }
+
+  /* ---------------- Fita (linha do tempo) ---------------- */
+  .fita {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    padding: 1.4rem 1.2rem;
+    overflow-x: auto;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+
+  .seta {
+    flex: 0 0 auto;
+    color: var(--ink-faint);
+    font-size: 1.1rem;
+    line-height: 1;
+    user-select: none;
+  }
+
+  /* Ramificação: dois post-its empilhados na mesma coluna */
+  .ramo {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    flex: 0 0 auto;
+  }
+
+  /* Evento pivotal: a linha vertical que corta a parede */
+  .pivotal {
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 2px;
+    background: repeating-linear-gradient(
+      to bottom, var(--pivotal) 0 7px, transparent 7px 14px);
+    position: relative;
+    margin: 0 1.6rem 0 1rem;
+  }
+  .pivotal span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    white-space: nowrap;
+    font-size: .6rem;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--pivotal);
+    background: var(--panel);
+    padding: .3rem .1rem;
+  }
+
+  /* ---------------- Legenda ---------------- */
+  .legenda {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+    gap: .8rem;
+  }
+  .legenda-item {
+    display: flex;
+    gap: .6rem;
+    align-items: flex-start;
+    padding: .7rem .8rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+  }
+  .swatch {
+    flex: 0 0 auto;
+    width: 21px; height: 21px;
+    border-radius: 2px;
+    box-shadow: 1px 1px 3px var(--shadow);
+    margin-top: .1rem;
+  }
+  .legenda-item div { display: flex; flex-direction: column; }
+  .legenda-item b { font-size: .8rem; }
+  .legenda-item small { color: var(--ink-soft); font-size: .73rem; line-height: 1.35; }
+
+  /* ---------------- Cards ---------------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    padding: 1.1rem 1.15rem;
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    border-top: 3px solid var(--tag, var(--rule));
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+  }
+  .card .tag {
+    font-size: .64rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--tag);
+  }
+  .card b { font-size: .97rem; }
+  .card p { margin: 0; color: var(--ink-soft); font-size: .84rem; }
+
+  /* ---------------- Tabelas ---------------- */
+  .tabela-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 3px; }
+  table { border-collapse: collapse; width: 100%; background: var(--panel); font-size: .85rem; }
+  th, td { text-align: left; padding: .6rem .85rem; border-bottom: 1px solid var(--rule); }
+  th {
+    font-size: .66rem; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--ink-faint); font-weight: 700; white-space: nowrap;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code {
+    font-family: var(--mono); font-size: .8rem;
+    background: var(--board); padding: .1rem .35rem; border-radius: 2px;
+  }
+
+  ul.notas { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .5rem; }
+  ul.notas li { color: var(--ink-soft); }
+  ul.notas b { color: var(--ink); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 1.2rem;
+    color: var(--ink-faint);
+    font-size: .78rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Tech Challenge · Fase 1 · Documentação DDD</div>
+    <h1>Event Storming<br><em>FIAP Cloud Games</em></h1>
+    <p class="lede">
+      O quadro da oficina que descobriu como o negócio funciona — começando pelos
+      acontecimentos, não por telas ou tabelas. Três fluxos modelados: criação de
+      usuários, criação de jogos e a aquisição que forma a biblioteca do jogador.
+    </p>
+    <div class="meta">
+      <span><b>20</b> eventos de domínio</span>
+      <span><b>10</b> comandos</span>
+      <span><b>3</b> atores</span>
+      <span><b>6</b> políticas</span>
+      <span><b>2</b> eventos pivotais</span>
+      <span><b>3</b> contextos delimitados</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>Legenda</h2>
+      <p>Notação da disciplina. A cor não é decoração: ela diz que tipo de coisa está escrita no papel.</p>
+    </div>
+    <div class="legenda">
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--evento)"></span>
+        <div><b>Evento de domínio</b><small>Algo que já aconteceu. Escrito no passado.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--comando)"></span>
+        <div><b>Comando</b><small>A ação que causa o evento. No imperativo.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--ator)"></span>
+        <div><b>Ator</b><small>Quem dispara o comando. Pela função, não pelo nome.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--politica)"></span>
+        <div><b>Política</b><small>Regra que reage a um evento e dispara outro comando.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--leitura)"></span>
+        <div><b>Modelo de leitura</b><small>Tela ou consulta vista antes de decidir.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--atencao)"></span>
+        <div><b>Ponto de atenção</b><small>Dúvida, risco ou gargalo a investigar.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: var(--excecao)"></span>
+        <div><b>Evento de exceção</b><small>Também é evento: entra na linha do tempo, não some.</small></div>
+      </div>
+      <div class="legenda-item">
+        <span class="swatch" style="background: repeating-linear-gradient(to bottom, var(--pivotal) 0 4px, transparent 4px 8px)"></span>
+        <div><b>Evento pivotal</b><small>Troca de fase. Indica fronteira de contexto.</small></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Fluxo 1 — Criação de usuários</h2>
+      <p>O visitante se cadastra e vira Cliente. As três rejeições são eventos como quaisquer outros.</p>
+    </div>
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Visitante</div>
+      <span class="seta">→</span>
+      <div class="postit comando"><span class="tipo">Comando</span>Cadastrar usuário</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Usuário cadastrado</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>E-mail inválido</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Senha fora da política</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>E-mail duplicado</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit politica"><span class="tipo">Política</span>Quando cadastrado → gerar hash da senha</div>
+        <div class="postit politica"><span class="tipo">Política</span>Quando cadastrado → atribuir perfil Cliente</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Senha protegida por hash</div>
+        <div class="postit evento"><span class="tipo">Evento</span>Perfil Cliente atribuído</div>
+      </div>
+    </div>
+
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Usuário</div>
+      <span class="seta">→</span>
+      <div class="postit comando"><span class="tipo">Comando</span>Autenticar usuário</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Usuário autenticado</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Autenticação recusada</div>
+      </div>
+      <div class="pivotal"><span>Pivotal</span></div>
+      <div class="postit politica"><span class="tipo">Política</span>Quando autenticado → emitir token com o perfil</div>
+      <span class="seta">→</span>
+      <div class="postit evento"><span class="tipo">Evento</span>Token JWT emitido</div>
+    </div>
+
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Administrador</div>
+      <span class="seta">→</span>
+      <div class="postit leitura"><span class="tipo">Leitura</span>Lista de usuários</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit comando"><span class="tipo">Comando</span>Alterar perfil do usuário</div>
+        <div class="postit comando"><span class="tipo">Comando</span>Remover usuário</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Perfil do usuário alterado</div>
+        <div class="postit evento"><span class="tipo">Evento</span>Usuário removido</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="postit politica"><span class="tipo">Política</span>Quando removido → remover sua biblioteca</div>
+      <span class="seta">→</span>
+      <div class="postit evento"><span class="tipo">Evento</span>Biblioteca removida</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Fluxo 2 — Criação de jogos</h2>
+      <p>Cadastrar jogo e criar promoções são comandos exclusivos do administrador.</p>
+    </div>
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Administrador</div>
+      <span class="seta">→</span>
+      <div class="postit comando"><span class="tipo">Comando</span>Cadastrar jogo</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Jogo cadastrado</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Título obrigatório</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Preço negativo</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="postit politica"><span class="tipo">Política</span>Quando cadastrado → publicar no catálogo sem promoção</div>
+      <span class="seta">→</span>
+      <div class="postit evento"><span class="tipo">Evento</span>Jogo disponível no catálogo</div>
+    </div>
+
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Administrador</div>
+      <span class="seta">→</span>
+      <div class="postit leitura"><span class="tipo">Leitura</span>Catálogo de jogos</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit comando"><span class="tipo">Comando</span>Aplicar promoção</div>
+        <div class="postit comando"><span class="tipo">Comando</span>Encerrar promoção</div>
+        <div class="postit comando"><span class="tipo">Comando</span>Atualizar jogo</div>
+        <div class="postit comando"><span class="tipo">Comando</span>Remover jogo</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Promoção aplicada</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Desconto fora de 0–90%</div>
+        <div class="postit evento"><span class="tipo">Evento</span>Promoção encerrada</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="postit politica"><span class="tipo">Política</span>Quando promoção aplicada → recalcular preço atual</div>
+      <span class="seta">→</span>
+      <div class="postit evento"><span class="tipo">Evento</span>Preço promocional vigente</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Fluxo 3 — Aquisição de jogo</h2>
+      <p>O core da plataforma. É aqui que o jogo deixa de ser produto e passa a pertencer a alguém.</p>
+    </div>
+    <div class="fita">
+      <div class="postit ator"><span class="tipo">Ator</span>Usuário</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit leitura"><span class="tipo">Leitura</span>Catálogo de jogos</div>
+        <div class="postit leitura"><span class="tipo">Leitura</span>Lista de promoções</div>
+      </div>
+      <span class="seta">→</span>
+      <div class="postit comando"><span class="tipo">Comando</span>Adquirir jogo</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Jogo adquirido</div>
+        <div class="postit evento excecao"><span class="tipo">Rejeição</span>Jogo já está na biblioteca</div>
+      </div>
+      <div class="pivotal"><span>Pivotal</span></div>
+      <div class="postit politica"><span class="tipo">Política</span>Quando adquirido → congelar o preço pago</div>
+      <span class="seta">→</span>
+      <div class="ramo">
+        <div class="postit evento"><span class="tipo">Evento</span>Preço pago registrado</div>
+        <div class="postit evento"><span class="tipo">Evento</span>Biblioteca do usuário atualizada</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Contextos delimitados</h2>
+      <p>Os dois eventos pivotais revelaram três fronteiras. No monolito desta fase elas convivem no mesmo processo — mas já separadas em agregados e pastas.</p>
+    </div>
+    <div class="cards">
+      <div class="card" style="--tag: var(--comando-edge)">
+        <span class="tag">Genérico · Upstream</span>
+        <b>Identidade e Acesso</b>
+        <p>Cadastro, autenticação, emissão de token e perfis. Fornece a identidade para todos os outros contextos.</p>
+      </div>
+      <div class="card" style="--tag: var(--politica-edge)">
+        <span class="tag">Core · Upstream</span>
+        <b>Catálogo</b>
+        <p>Jogos, preços e promoções. Fornece o preço vigente no momento da compra.</p>
+      </div>
+      <div class="card" style="--tag: var(--leitura-edge)">
+        <span class="tag">Core · Downstream</span>
+        <b>Biblioteca</b>
+        <p>Aquisições e o acervo do jogador. Consome identidade e preço, e guarda o histórico.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Agregados</h2>
+      <p>Consistência forçada: a biblioteca só muda por <code>Usuario.AdquirirJogo()</code>. Nada de fora adiciona um item na coleção — pode apenas solicitar que o agregado o faça.</p>
+    </div>
+    <div class="cards">
+      <div class="card" style="--tag: var(--evento-edge)">
+        <span class="tag">Raiz de agregado</span>
+        <b>Usuário</b>
+        <p><b>Entidades:</b> Usuario, UsuarioJogo<br><b>Objetos de valor:</b> Email, Senha</p>
+      </div>
+      <div class="card" style="--tag: var(--evento-edge)">
+        <span class="tag">Raiz de agregado</span>
+        <b>Jogo</b>
+        <p><b>Entidade:</b> Jogo<br><b>Estado protegido:</b> preço de tabela e percentual de desconto</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Linguagem ubíqua</h2>
+      <p>O termo “preço” significava três coisas diferentes. Separá-lo foi a decisão de vocabulário mais importante do projeto — e os três nomes aparecem no código.</p>
+    </div>
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr><th>Termo</th><th>Significado</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><b>Preço de tabela</b></td><td>Valor cadastrado do jogo, sem desconto</td></tr>
+          <tr><td><b>Preço atual</b></td><td>Valor cobrado hoje, já com a promoção aplicada</td></tr>
+          <tr><td><b>Preço pago</b></td><td>Valor efetivamente pago na aquisição — não muda depois</td></tr>
+          <tr><td><b>Perfil</b></td><td>Nível de acesso: Cliente ou Admin</td></tr>
+          <tr><td><b>Adquirir</b></td><td>Ato de incluir um jogo na biblioteca do usuário</td></tr>
+          <tr><td><b>Biblioteca</b></td><td>Conjunto de jogos que um usuário adquiriu</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Do evento ao código</h2>
+      <p>Cada evento modelado tem endereço na implementação — a modelagem virou código, não ficou no diagrama.</p>
+    </div>
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr><th>Evento de domínio</th><th>Onde vive</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Usuário cadastrado</td><td><code>Usuario.Criar()</code></td></tr>
+          <tr><td>Rejeição: e-mail inválido</td><td><code>Email.Criar()</code></td></tr>
+          <tr><td>Rejeição: senha fora da política</td><td><code>Senha.Criar()</code></td></tr>
+          <tr><td>Usuário autenticado</td><td><code>Usuario.Autenticar()</code></td></tr>
+          <tr><td>Token JWT emitido</td><td><code>TokenService.GerarToken()</code></td></tr>
+          <tr><td>Jogo cadastrado</td><td><code>Jogo.Criar()</code></td></tr>
+          <tr><td>Promoção aplicada</td><td><code>Jogo.AplicarPromocao()</code></td></tr>
+          <tr><td>Preço promocional vigente</td><td><code>Jogo.PrecoAtual()</code></td></tr>
+          <tr><td>Jogo adquirido</td><td><code>Usuario.AdquirirJogo()</code></td></tr>
+          <tr><td>Rejeição: jogo já na biblioteca</td><td><code>Usuario.JaPossui()</code></td></tr>
+          <tr><td>Preço pago registrado</td><td><code>UsuarioJogo.Criar()</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Pontos de atenção</h2>
+      <p>Riscos e decisões conscientes registrados durante a oficina.</p>
+    </div>
+    <ul class="notas">
+      <li><b>Não existe pagamento nesta fase.</b> A aquisição é imediata: o preço é registrado, mas nada é cobrado.</li>
+      <li><b>O administrador inicial nasce com senha padrão.</b> Necessário para quebrar o impasse — só admin cadastra jogo, e todo usuário público nasce Cliente.</li>
+      <li><b>Não há confirmação de e-mail.</b> O cadastro é aceito sem verificar se o endereço existe.</li>
+      <li><b>Não há refresh token.</b> Expirado o token, é preciso autenticar de novo.</li>
+      <li><b>Remover usuário apaga a biblioteca.</b> Perde-se o histórico — reavaliar quando houver pagamento.</li>
+      <li><b>Remover jogo é bloqueado se alguém já comprou.</b> Protege a integridade das bibliotecas.</li>
+      <li><b>Promoção não tem vigência por data.</b> O desconto vale até alguém encerrá-lo manualmente.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Modelado seguindo a ordem da oficina: brainstorming de eventos → linha do tempo →
+    pontos de atenção → eventos pivotais → comandos e atores → políticas → modelos de
+    leitura → sistemas externos → agregados → contextos delimitados.
+    Nenhum sistema externo nesta fase; pagamento entra nas seguintes.
+  </footer>
+
+</div>

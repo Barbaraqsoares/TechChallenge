@@ -1,0 +1,920 @@
+{
+  "info": {
+    "_postman_id": "b8e4d3f2-5c9e-4f1b-8d42-techchallengedemo",
+    "name": "TechChallenge - Demonstracao",
+    "description": "Roteiro de demonstracao da API do Tech Challenge - Fase 1.\n\nSao 18 requisicoes na ordem da apresentacao, cobrindo cada requisito do enunciado uma vez: cadastro com validacao, autenticacao JWT, os dois niveis de acesso, catalogo e promocoes pelo administrador, e a biblioteca do usuario.\n\n## Antes de gravar\n\n1. `docker compose down -v && docker compose up -d --build`\n   (recria o banco do zero, para os ids comecarem em 1)\n2. Rode a colecao **na ordem**. Os tokens e o id do jogo sao capturados automaticamente, entao nao ha nada para copiar e colar durante a gravacao.\n\n## Usuarios\n\n- **admin / Admin@123** - criado automaticamente pela aplicacao\n- **cliente / Senha@123** - criado pelo item 1.3 da propria colecao\n\nPara a bateria completa de testes, use a colecao `TechChallenge.postman_collection.json`, com 53 requisicoes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "tokenAdmin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenCliente",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "jogoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "clienteLogin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clienteEmail",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Cadastro de usuario",
+      "description": "Requisito: identificar o cliente por nome, e-mail e senha, validando o formato do e-mail e exigindo senha segura (minimo 8 caracteres, com letra, numero e caractere especial).",
+      "item": [
+        {
+          "name": "1.1 Senha fraca e recusada (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: A senha deve possuir no mínimo 8 caracteres.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"A senha deve possuir no mínimo 8 caracteres.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Mostra a validacao de senha segura exigida pelo enunciado.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teste\",\n  \"email\": \"teste@fiap.com\",\n  \"login\": \"teste-senha\",\n  \"password\": \"123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "1.2 E-mail invalido e recusado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: E-mail inválido.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"E-mail inválido.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Mostra a validacao de formato de e-mail.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Teste\",\n  \"email\": \"isso-nao-e-um-email\",\n  \"login\": \"teste-email\",\n  \"password\": \"Senha@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "1.3 Cadastro valido (201)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Sufixo unico por execucao: permite rodar a colecao varias vezes seguidas",
+                  "// sem precisar recriar o banco.",
+                  "const sufixo = Date.now().toString().slice(-6);",
+                  "",
+                  "pm.collectionVariables.set(\"clienteLogin\", \"cliente\" + sufixo);",
+                  "pm.collectionVariables.set(\"clienteEmail\", \"cliente\" + sufixo + \"@fiap.com\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Nasce com perfil Cliente e sem expor a senha\", function () {",
+                  "    const corpo = pm.response.json();",
+                  "",
+                  "    pm.expect(corpo.perfil).to.eql(2); // 1 = Admin, 2 = Client",
+                  "    pm.expect(corpo).to.not.have.property(\"password\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Cria o usuario comum usado no restante da demonstracao. A senha e gravada com hash BCrypt e nunca volta na resposta.\n\nO login e gerado com um sufixo unico a cada execucao, para a colecao poder ser repetida sem recriar o banco - util ao ensaiar a gravacao.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cliente Teste\",\n  \"email\": \"{{clienteEmail}}\",\n  \"login\": \"{{clienteLogin}}\",\n  \"password\": \"Senha@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticacao JWT",
+      "description": "Requisito: autenticacao por token JWT.",
+      "item": [
+        {
+          "name": "2.1 Senha errada nao autentica (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: Usuário ou senha inválidos.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"Usuário ou senha inválidos.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin\",\n  \"password\": \"SenhaErrada@1\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2.2 Login do ADMINISTRADOR (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Devolve token JWT e expiracao\", function () {",
+                  "    pm.expect(pm.response.json().token).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"tokenAdmin\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "O administrador e criado na primeira inicializacao. O token e guardado automaticamente e reutilizado pelos itens seguintes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"admin\",\n  \"password\": \"Admin@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "2.3 Login do CLIENTE (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"tokenCliente\", pm.response.json().token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Token do usuario comum, usado para demonstrar os dois niveis de acesso.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"login\": \"{{clienteLogin}}\",\n  \"password\": \"Senha@123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Dois niveis de acesso",
+      "description": "Requisito: perfil Usuario com acesso a plataforma e a biblioteca; perfil Administrador podendo cadastrar jogos, administrar usuarios e criar promocoes.",
+      "item": [
+        {
+          "name": "3.1 Sem token nao entra (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/Game",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Game"
+              ]
+            }
+          }
+        },
+        {
+          "name": "3.2 CLIENTE nao administra usuarios (403)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Users"
+              ]
+            },
+            "description": "Token valido, mas o perfil Cliente nao tem permissao nesta rota."
+          }
+        },
+        {
+          "name": "3.3 CLIENTE consulta o catalogo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Game",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Game"
+              ]
+            },
+            "description": "O mesmo usuario acessa normalmente o que o perfil dele permite."
+          }
+        },
+        {
+          "name": "3.4 ADMIN administra usuarios (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Nenhum usuario expoe a senha\", function () {",
+                  "    pm.response.json().forEach(function (usuario) {",
+                  "        pm.expect(usuario).to.not.have.property(\"password\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Users"
+              ]
+            },
+            "description": "A mesma rota do 3.2, agora com o token de administrador."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Catalogo e promocoes (Admin)",
+      "description": "Requisito: administrador cadastra jogos e cria promocoes.",
+      "item": [
+        {
+          "name": "4.1 ADMIN cadastra jogo (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Id vem do banco e o jogo nasce ativo\", function () {",
+                  "    const corpo = pm.response.json();",
+                  "",
+                  "    pm.expect(corpo.id).to.be.above(0);",
+                  "    pm.expect(corpo.isActive).to.be.true;",
+                  "});",
+                  "",
+                  "pm.collectionVariables.set(\"jogoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Game",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Game"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Minecraft\",\n  \"description\": \"Jogo de construcao e exploracao\",\n  \"price\": 99.9,\n  \"isMultiplayer\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.2 Preco negativo e recusado (400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: O preço do jogo não pode ser negativo.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"O preço do jogo não pode ser negativo.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Game",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Game"
+              ]
+            },
+            "description": "Regra de negocio validada no dominio, antes de chegar ao banco.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jogo Invalido\",\n  \"price\": -10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "4.3 Jogo inexistente (404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: Jogo 999 não encontrado.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"Jogo 999 não encontrado.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/Game/999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "Game",
+                "999"
+              ]
+            },
+            "description": "Mostra o contrato de erro: ProblemDetails com traceId, o mesmo gravado no log da aplicacao."
+          }
+        },
+        {
+          "name": "4.4 ADMIN cria promocao (201)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Promocao vinculada ao jogo\", function () {",
+                  "    pm.expect(pm.response.json().gameIds).to.have.lengthOf(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/Promotions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "Promotions"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Black Friday\",\n  \"discount\": 25,\n  \"startDate\": \"2026-11-20T00:00:00Z\",\n  \"endDate\": \"2026-11-30T23:59:59Z\",\n  \"gameIds\": [\n    \"{{jogoId}}\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Biblioteca de jogos (Cliente)",
+      "description": "Requisito: biblioteca de jogos adquiridos, com acesso do proprio usuario.",
+      "item": [
+        {
+          "name": "5.1 CLIENTE adquire o jogo (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Retorna o jogo adquirido\", function () {",
+                  "    pm.expect(pm.response.json().gameName).to.be.a(\"string\").and.not.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/LibraryOfGames/{{jogoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "LibraryOfGames",
+                "{{jogoId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.2 Nao adquire o mesmo jogo duas vezes (409)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro padronizado com traceId\", function () {",
+                  "    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/problem+json\");",
+                  "    pm.expect(pm.response.json().traceId).to.be.a(\"string\").and.not.empty;",
+                  "});",
+                  "",
+                  "pm.test(\"Mensagem: O jogo já está na biblioteca do usuário.\", function () {",
+                  "    pm.expect(pm.response.json().detail).to.eql(\"O jogo já está na biblioteca do usuário.\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/LibraryOfGames/{{jogoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "LibraryOfGames",
+                "{{jogoId}}"
+              ]
+            },
+            "description": "A requisicao e valida e o jogo existe: o conflito e com o estado atual da biblioteca. Por isso 409 Conflict, e nao 400."
+          }
+        },
+        {
+          "name": "5.3 CLIENTE ve a propria biblioteca (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Biblioteca tem o jogo comprado\", function () {",
+                  "    pm.expect(pm.response.json()).to.have.lengthOf(1);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/LibraryOfGames",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "LibraryOfGames"
+              ]
+            }
+          }
+        },
+        {
+          "name": "5.4 ADMIN ve a dele, separada (200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Biblioteca do admin esta vazia\", function () {",
+                  "    pm.expect(pm.response.json()).to.be.an(\"array\").that.is.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenAdmin}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/LibraryOfGames",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "LibraryOfGames"
+              ]
+            },
+            "description": "Mesma rota do 5.3, token diferente: cada usuario enxerga apenas a propria biblioteca."
+          }
+        }
+      ]
+    }
+  ]
+}
